@@ -1,0 +1,4 @@
+/home/sergiog/Documents/cse4310/cv_containers/build/CMakeFiles/rebuild_cache.dir
+/home/sergiog/Documents/cse4310/cv_containers/build/CMakeFiles/edit_cache.dir
+/home/sergiog/Documents/cse4310/cv_containers/build/CMakeFiles/cv_clickable.dir
+/home/sergiog/Documents/cse4310/cv_containers/build/CMakeFiles/cv_containers.dir
