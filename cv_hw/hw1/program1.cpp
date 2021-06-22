@@ -1,3 +1,8 @@
+/*
+Sergio Gonzalez
+CSE 4310 HW1
+*/
+
 //
 //    Copyright 2021 Christopher D. McMurrough
 //
@@ -36,7 +41,7 @@
 int main(int argc, char **argv)
 {
     // open the input image
-    std::string inputFileName = "test.png";
+    std::string inputFileName = argv[1];
     cv::Mat imageIn;
     imageIn = cv::imread(inputFileName, cv::IMREAD_COLOR);
 
