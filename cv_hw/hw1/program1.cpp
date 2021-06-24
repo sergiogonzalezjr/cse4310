@@ -34,8 +34,13 @@ CSE 4310 HW1
 
 //enum tool {EYEDROPPER, CROP, PENCIL, PAINTBUCKET, RESET};
 
+std::string inputFileName;
 int current_tool = 0;
 bool printed = false;
+bool drawing = false;
+cv::Mat imageIn;
+cv::Vec3b eyedrop_sample(255,255,255);
+cv::Point p1, p2;
 
 /*******************************************************************************************************************//**
  * @brief handler for image click callbacks
@@ -48,7 +53,8 @@ bool printed = false;
  * @author Christoper D. McMurrough
  **********************************************************************************************************************/
 static void clickCallback(int event, int x, int y, int flags, void* userdata)
-{
+{	
+	
     if (printed == false)
     {
         if (current_tool == 0)
@@ -61,14 +67,43 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
             std::cout << "CURRENT TOOL: PAINTBUCKET" << std::endl;
         else if (current_tool == 4)
             std::cout << "CURRENT TOOL: RESET" << std::endl;
-            
-	
+        
 	printed = true;
     }
 
     if(event == cv::EVENT_LBUTTONDOWN)
     {
-        //std::cout << "LEFT CLICK (" << x << ", " << y << ")" << std::endl;
+        if(current_tool == 0)
+        {
+        	if((eyedrop_sample[0] != imageIn.at<cv::Vec3b>(y,x)[0]) || (eyedrop_sample[1] != imageIn.at<cv::Vec3b>(y,x)[1]) || (eyedrop_sample[2] != imageIn.at<cv::Vec3b>(y,x)[2]))
+        	{
+			eyedrop_sample = imageIn.at<cv::Vec3b>(y,x);
+			std::cout << (int)eyedrop_sample[0] << "-" << (int)eyedrop_sample[1] << "-" << (int)eyedrop_sample[2] << std::endl;
+        	}
+        	
+        	cv::imshow("imageIn", imageIn);
+    		cv::waitKey();
+        }
+        else if(current_tool == 1)
+        {
+        	p1 = cv::Point(x,y);
+        }
+        else if(current_tool == 2)
+        {
+        	drawing = true;
+        	imageIn.at<cv::Vec3b>(y,x) = eyedrop_sample;
+        	
+        	cv::imshow("imageIn", imageIn);
+    		cv::waitKey();
+        }
+        else if(current_tool == 3)
+        {
+        	floodFill(imageIn, cv::Point(x,y), eyedrop_sample, 0, cv::Scalar(), cv::Scalar(), 4);
+        	
+        	cv::imshow("imageIn", imageIn);
+    		cv::waitKey();
+        }
+        
     }
     else if(event == cv::EVENT_RBUTTONDOWN)
     {
@@ -77,13 +112,35 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
         
         printed = false;
     }
-    else if(event == cv::EVENT_MBUTTONDOWN)
-    {
-        //std::cout << "MIDDLE CLICK (" << x << ", " << y << ")" << std::endl;
-    }
     else if(event == cv::EVENT_MOUSEMOVE)
     {
-        //std::cout << "MOUSE OVER (" << x << ", " << y << ")" << std::endl;
+	if(drawing == true)
+        {
+		imageIn.at<cv::Vec3b>(y,x) = eyedrop_sample;
+		cv::imshow("imageIn", imageIn);
+	    	cv::waitKey();
+        }
+    }
+    else if(event == cv::EVENT_LBUTTONUP)
+    {
+    	if(current_tool == 1)
+    	{
+    		p2 = cv::Point(x,y);
+    		
+    		imageIn = imageIn(cv::Rect(p1,p2));
+    		cv::imshow("imageIn", imageIn);
+	    	cv::waitKey();
+    	}
+    	else if(current_tool == 2)
+    	{
+    		drawing = false;
+    	}
+    }
+    else if(event == cv::EVENT_LBUTTONDBLCLK && (current_tool == 4))
+    {
+        imageIn = cv::imread(inputFileName, cv::IMREAD_COLOR);
+	cv::imshow("imageIn", imageIn);
+    	cv::waitKey();
     }
 }
 
@@ -97,8 +154,8 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
 int main(int argc, char **argv)
 {
     // open the input image
-    std::string inputFileName = argv[1];
-    cv::Mat imageIn;
+    inputFileName = argv[1];
+    //cv::Mat imageIn;
     imageIn = cv::imread(inputFileName, cv::IMREAD_COLOR);
 
     // check for file error
