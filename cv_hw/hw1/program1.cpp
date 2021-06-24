@@ -32,9 +32,9 @@ CSE 4310 HW1
 #include <string>
 #include "opencv2/opencv.hpp"
 
-enum tool {EYEDROPPER, CROP, PENCIL, PAINTBUCKET, RESET};
+//enum tool {EYEDROPPER, CROP, PENCIL, PAINTBUCKET, RESET};
 
-tool current_tool = EYEDROPPER;
+int current_tool = EYEDROPPER;
 bool printed = false;
 
 /*******************************************************************************************************************//**
@@ -53,15 +53,15 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
     {
         printed = true;
 
-        if (current_tool == EYEDROPPER)
+        if (current_tool == 0)
             std::cout << "CURRENT TOOL: EYEDROPPER" << std::endl;
-        else if (current_tool == CROP)
+        else if (current_tool == 1)
             std::cout << "CURRENT TOOL: CROP" << std::endl;
-        else if (current_tool == PENCIL)
+        else if (current_tool == 2)
             std::cout << "CURRENT TOOL: PENCIL" << std::endl;
-        else if (current_tool == PAINTBUCKET)
+        else if (current_tool == 3)
             std::cout << "CURRENT TOOL: PAINTBUCKET" << std::endl;
-        else if (current_tool == RESET)
+        else if (current_tool == 4)
             std::cout << "CURRENT TOOL: RESET" << std::endl;
     }
 
