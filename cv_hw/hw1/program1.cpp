@@ -34,7 +34,7 @@ CSE 4310 HW1
 
 //enum tool {EYEDROPPER, CROP, PENCIL, PAINTBUCKET, RESET};
 
-int current_tool = EYEDROPPER;
+int current_tool = 0;
 bool printed = false;
 
 /*******************************************************************************************************************//**
@@ -51,8 +51,6 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
 {
     if (printed == false)
     {
-        printed = true;
-
         if (current_tool == 0)
             std::cout << "CURRENT TOOL: EYEDROPPER" << std::endl;
         else if (current_tool == 1)
@@ -63,24 +61,29 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
             std::cout << "CURRENT TOOL: PAINTBUCKET" << std::endl;
         else if (current_tool == 4)
             std::cout << "CURRENT TOOL: RESET" << std::endl;
+            
+	
+	printed = true;
     }
 
     if(event == cv::EVENT_LBUTTONDOWN)
     {
-        std::cout << "LEFT CLICK (" << x << ", " << y << ")" << std::endl;
+        //std::cout << "LEFT CLICK (" << x << ", " << y << ")" << std::endl;
     }
     else if(event == cv::EVENT_RBUTTONDOWN)
     {
         current_tool++;
-        current_tool%5;
+        current_tool %= 5;
+        
+        printed = false;
     }
     else if(event == cv::EVENT_MBUTTONDOWN)
     {
-        std::cout << "MIDDLE CLICK (" << x << ", " << y << ")" << std::endl;
+        //std::cout << "MIDDLE CLICK (" << x << ", " << y << ")" << std::endl;
     }
     else if(event == cv::EVENT_MOUSEMOVE)
     {
-        std::cout << "MOUSE OVER (" << x << ", " << y << ")" << std::endl;
+        //std::cout << "MOUSE OVER (" << x << ", " << y << ")" << std::endl;
     }
 }
 
