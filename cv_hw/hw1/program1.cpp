@@ -28,8 +28,61 @@ CSE 4310 HW1
 
 // include necessary dependencies
 #include <iostream>
+#include <stdbool.h>
 #include <string>
 #include "opencv2/opencv.hpp"
+
+enum tool {EYEDROPPER, CROP, PENCIL, PAINTBUCKET, RESET};
+
+tool current_tool = EYEDROPPER;
+bool printed = false;
+
+/*******************************************************************************************************************//**
+ * @brief handler for image click callbacks
+ * @param[in] event number of command line arguments
+ * @param[in] x string array of command line arguments
+ * @param[in] y string array of command line arguments
+ * @param[in] flags string array of command line arguments
+ * @param[in] userdata string array of command line arguments
+ * @return return code (0 for normal termination)
+ * @author Christoper D. McMurrough
+ **********************************************************************************************************************/
+static void clickCallback(int event, int x, int y, int flags, void* userdata)
+{
+    if (printed == false)
+    {
+        printed = true;
+
+        if (current_tool == EYEDROPPER)
+            std::cout << "CURRENT TOOL: EYEDROPPER" << std::endl;
+        else if (current_tool == CROP)
+            std::cout << "CURRENT TOOL: CROP" << std::endl;
+        else if (current_tool == PENCIL)
+            std::cout << "CURRENT TOOL: PENCIL" << std::endl;
+        else if (current_tool == PAINTBUCKET)
+            std::cout << "CURRENT TOOL: PAINTBUCKET" << std::endl;
+        else if (current_tool == RESET)
+            std::cout << "CURRENT TOOL: RESET" << std::endl;
+    }
+
+    if(event == cv::EVENT_LBUTTONDOWN)
+    {
+        std::cout << "LEFT CLICK (" << x << ", " << y << ")" << std::endl;
+    }
+    else if(event == cv::EVENT_RBUTTONDOWN)
+    {
+        current_tool++;
+        current_tool%5;
+    }
+    else if(event == cv::EVENT_MBUTTONDOWN)
+    {
+        std::cout << "MIDDLE CLICK (" << x << ", " << y << ")" << std::endl;
+    }
+    else if(event == cv::EVENT_MOUSEMOVE)
+    {
+        std::cout << "MOUSE OVER (" << x << ", " << y << ")" << std::endl;
+    }
+}
 
 /*******************************************************************************************************************//**
  * @brief program entry point
@@ -52,11 +105,11 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    // get the image size
-    std::cout << "image width: " << imageIn.size().width << std::endl;
-    std::cout << "image height: " << imageIn.size().height << std::endl;
-    std::cout << "image channels: " << imageIn.channels() << std::endl;
+    cv::imshow("imageIn", imageIn);
+    cv::setMouseCallback("imageIn", clickCallback, &imageIn);
+    cv::waitKey();
 
+    /*
     // display the input image
     cv::imshow("imageIn", imageIn);
     cv::waitKey();
@@ -91,4 +144,6 @@ int main(int argc, char **argv)
     cv::line(imageIn, cornerTopRight, cornerBottomLeft, cv::Scalar(0, 0, 0), 3);
     cv::imshow("imageIn", imageIn);
     cv::waitKey();
+    */
+
 }
