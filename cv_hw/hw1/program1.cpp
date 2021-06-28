@@ -1,6 +1,8 @@
 /*
 Sergio Gonzalez
 CSE 4310 HW1
+
+This program was built on top of the existing 'cv_clickable'.
 */
 
 //
@@ -21,8 +23,8 @@ CSE 4310 HW1
 //
 
 /*******************************************************************************************************************//**
- * @file cv_annotation.cpp
- * @brief C++ example of basic image annotation and ROIs in OpenCV
+ * @file cv_clickable.cpp
+ * @brief C++ example of basic interaction with an image in OpenCV
  * @author Christopher D. McMurrough
  **********************************************************************************************************************/
 
@@ -32,15 +34,15 @@ CSE 4310 HW1
 #include <string>
 #include "opencv2/opencv.hpp"
 
-//enum tool {EYEDROPPER, CROP, PENCIL, PAINTBUCKET, RESET};
 
-std::string inputFileName;
-int current_tool = 0;
-bool printed = false;
-bool drawing = false;
-cv::Mat imageIn;
-cv::Vec3b eyedrop_sample(255,255,255);
-cv::Point p1, p2;
+// global variables
+std::string inputFileName; // contains filename
+int current_tool = 0; // used to keep track of current tool 
+bool printed = false; // flag used to track whether the current tool has been printed to the console
+bool drawing = false; // flag for pencil tool engagement, set to true when left click, false when left click released
+cv::Mat imageIn; // container for image
+cv::Vec3b eyedrop_sample(255,255,255); // color in eyedrop tool, always starts as white
+cv::Point p1, p2; // point variables for crop tool
 
 /*******************************************************************************************************************//**
  * @brief handler for image click callbacks
@@ -57,6 +59,7 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
 	
     if (printed == false)
     {
+    	// enumeration of the tools is as below
         if (current_tool == 0)
             std::cout << "CURRENT TOOL: EYEDROPPER" << std::endl;
         else if (current_tool == 1)
@@ -78,11 +81,8 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
         	if((eyedrop_sample[0] != imageIn.at<cv::Vec3b>(y,x)[0]) || (eyedrop_sample[1] != imageIn.at<cv::Vec3b>(y,x)[1]) || (eyedrop_sample[2] != imageIn.at<cv::Vec3b>(y,x)[2]))
         	{
 			eyedrop_sample = imageIn.at<cv::Vec3b>(y,x);
-			std::cout << (int)eyedrop_sample[0] << "-" << (int)eyedrop_sample[1] << "-" << (int)eyedrop_sample[2] << std::endl;
+			std::cout << "CURRENT COLOR: " << (int)eyedrop_sample[0] << "-" << (int)eyedrop_sample[1] << "-" << (int)eyedrop_sample[2] << std::endl;
         	}
-        	
-        	cv::imshow("imageIn", imageIn);
-    		cv::waitKey();
         }
         else if(current_tool == 1)
         {
@@ -107,19 +107,17 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
     }
     else if(event == cv::EVENT_RBUTTONDOWN)
     {
+    	// this code block iterates throughout the tools, and flips the 'printed' variable to false
         current_tool++;
         current_tool %= 5;
         
         printed = false;
     }
-    else if(event == cv::EVENT_MOUSEMOVE)
+    else if((event == cv::EVENT_MOUSEMOVE) && (drawing == true) && (current_tool == 2))
     {
-	if(drawing == true)
-        {
-		imageIn.at<cv::Vec3b>(y,x) = eyedrop_sample;
-		cv::imshow("imageIn", imageIn);
-	    	cv::waitKey();
-        }
+	imageIn.at<cv::Vec3b>(y,x) = eyedrop_sample;
+	cv::imshow("imageIn", imageIn);
+	cv::waitKey();
     }
     else if(event == cv::EVENT_LBUTTONUP)
     {
@@ -168,42 +166,5 @@ int main(int argc, char **argv)
     cv::imshow("imageIn", imageIn);
     cv::setMouseCallback("imageIn", clickCallback, &imageIn);
     cv::waitKey();
-
-    /*
-    // display the input image
-    cv::imshow("imageIn", imageIn);
-    cv::waitKey();
-
-    // create a 200 pixel wide region of interest (ROI) on the center of the image
-    cv::Point p1(imageIn.cols / 2 - 100, imageIn.rows / 2 - 100);
-    cv::Point p2(imageIn.cols / 2 + 100, imageIn.rows / 2 + 100);
-    cv::Rect region(p1, p2);
-
-    // extract the ROI into its own image and display
-    cv::Mat imageROI = imageIn(region);
-    cv::imshow("imageROI", imageROI);
-    cv::waitKey();
-
-    // draw a red rectangle around the ROI and update the display
-    cv::rectangle(imageIn, region, cv::Scalar(0, 0, 255), 3);
-    cv::imshow("imageIn", imageIn);
-    cv::waitKey();
-
-    // draw a blue circle around the ROI and update the display
-    cv::Point center(imageIn.cols / 2, imageIn.rows / 2);
-    cv::circle(imageIn, center, 100, cv::Scalar(255, 0, 0), 3);
-    cv::imshow("imageIn", imageIn);
-    cv::waitKey();
-
-    // draw black lines from corner to corner and display
-    cv::Point cornerTopLeft(0, 0);
-    cv::Point cornerTopRight(imageIn.cols - 1, 0);
-    cv::Point cornerBottomLeft(0, imageIn.rows - 1);
-    cv::Point cornerBottomRight(imageIn.cols - 1, imageIn.rows - 1);
-    cv::line(imageIn, cornerTopLeft, cornerBottomRight, cv::Scalar(0, 0, 0), 3);
-    cv::line(imageIn, cornerTopRight, cornerBottomLeft, cv::Scalar(0, 0, 0), 3);
-    cv::imshow("imageIn", imageIn);
-    cv::waitKey();
-    */
-
 }
+
