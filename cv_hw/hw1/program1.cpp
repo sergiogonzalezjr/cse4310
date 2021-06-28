@@ -81,7 +81,7 @@ static void clickCallback(int event, int x, int y, int flags, void* userdata)
         	if((eyedrop_sample[0] != imageIn.at<cv::Vec3b>(y,x)[0]) || (eyedrop_sample[1] != imageIn.at<cv::Vec3b>(y,x)[1]) || (eyedrop_sample[2] != imageIn.at<cv::Vec3b>(y,x)[2]))
         	{
 			eyedrop_sample = imageIn.at<cv::Vec3b>(y,x);
-			std::cout << "CURRENT COLOR: " << (int)eyedrop_sample[0] << "-" << (int)eyedrop_sample[1] << "-" << (int)eyedrop_sample[2] << std::endl;
+			std::cout << "\tCURRENT COLOR: " << (int)eyedrop_sample[0] << "-" << (int)eyedrop_sample[1] << "-" << (int)eyedrop_sample[2] << std::endl;
         	}
         }
         else if(current_tool == 1)
