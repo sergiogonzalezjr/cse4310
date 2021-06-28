@@ -153,7 +153,6 @@ int main(int argc, char **argv)
 {
     // open the input image
     inputFileName = argv[1];
-    //cv::Mat imageIn;
     imageIn = cv::imread(inputFileName, cv::IMREAD_COLOR);
 
     // check for file error
