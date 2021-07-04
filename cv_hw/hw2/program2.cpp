@@ -36,6 +36,11 @@ This program was built on top of the existing 'cv_ellipse'.
 // configuration parameters
 #define NUM_COMNMAND_LINE_ARGUMENTS 1
 
+bool ellipse_sorter(cv::RotatedRect const& e1, cv::RotatedRect const& e2)
+{
+	return e1.size.width < e2.size.width;
+}
+
 /*******************************************************************************************************************//**
  * @brief program entry point
  * @param[in] argc number of command line arguments
@@ -150,13 +155,31 @@ int main(int argc, char **argv)
     // display the images
     //cv::imshow("imageIn", imageIn);
     //cv::imshow("imageGray", imageGray);
-    cv::imshow("imageEdges", imageEdges);
+    //cv::imshow("imageEdges", imageEdges);
     //cv::imshow("edges dilated", edgesDilated);
     //cv::imshow("edges eroded", edgesEroded);
-    cv::imshow("imageContours", imageContours);
+    //cv::imshow("imageContours", imageContours);
     //cv::imshow("imageRectangles", imageRectangles);
     cv::imshow("imageEllipse", imageEllipse);
         
     cv::waitKey();
+    
+    // sort by major major semi-axis of ellipses
+    std::sort(fittedEllipses.begin(), fittedEllipses.end(), &ellipse_sorter);
+    
+    while(1)
+    {
+    	if(fittedEllipses[0].size.width != 0)
+    	{
+    		break;
+    	}
+    	else
+    	{
+    		fittedEllipses.erase(fittedEllipses.begin());
+    	}
+    }
+    
+    for(int i = 0; i < fittedEllipses.size(); i++)
+    	std::cout << fittedEllipses[i].size.width << std::endl;
 }
 
