@@ -76,6 +76,18 @@ int average(std::vector<cv::RotatedRect> list)
 	return (sum / list.size());
 }
 
+cv::Scalar coin_color(int coin_group)
+{
+	if(coin_group == 0)
+		return cv::Scalar(255,0,0);
+	else if(coin_group == 1)
+		return cv::Scalar(0,0,255);
+	else if(coin_group == 2)
+		return cv::Scalar(0,255,255);
+	else
+		return cv::Scalar(0,255,0);
+}
+
 /*******************************************************************************************************************//**
  * @brief program entry point
  * @param[in] argc number of command line arguments
@@ -173,31 +185,6 @@ int main(int argc, char **argv)
             fittedEllipses[i] = cv::fitEllipse(contours[i]);
         }
     }
-
-    // draw the ellipses
-    cv::Mat imageEllipse = cv::Mat::zeros(imageEdges.size(), CV_8UC3);
-    const int minEllipseInliers = 50;
-    for(int i = 0; i < contours.size(); i++)
-    {
-        // draw any ellipse with sufficient inliers
-        if(contours.at(i).size() > minEllipseInliers)
-        {
-            cv::Scalar color = cv::Scalar(rand.uniform(0, 256), rand.uniform(0,256), rand.uniform(0,256));
-            cv::ellipse(imageEllipse, fittedEllipses[i], color, 2);
-        }
-    }
-
-    // display the images
-    //cv::imshow("imageIn", imageIn);
-    //cv::imshow("imageGray", imageGray);
-    //cv::imshow("imageEdges", imageEdges);
-    //cv::imshow("edges dilated", edgesDilated);
-    //cv::imshow("edges eroded", edgesEroded);
-    //cv::imshow("imageContours", imageContours);
-    //cv::imshow("imageRectangles", imageRectangles);
-    cv::imshow("imageEllipse", imageEllipse);
-        
-    cv::waitKey();
     
     // sort by major major semi-axis of ellipses
     std::sort(fittedEllipses.begin(), fittedEllipses.end(), &ellipse_sorter);
@@ -227,7 +214,7 @@ int main(int argc, char **argv)
 	{
 		temp_list.push_back(fittedEllipses[i]);
 		//coin_ticker();
-		std::cout << i << " EMPTY\t" << coin_group << "\t" << temp_list.size() << std::endl;
+		//std::cout << i << " EMPTY\t" << coin_group << "\t" << temp_list.size() << std::endl;
 		continue;
 	}
 	
@@ -243,7 +230,7 @@ int main(int argc, char **argv)
 		coin_group++;
 		i--;
 	}
-	std::cout << i << "      \t" << coin_group << "\t" << temp_list.size() << std::endl;
+	//std::cout << i << "      \t" << coin_group << "\t" << temp_list.size() << std::endl;
 	
     }
     
@@ -251,6 +238,34 @@ int main(int argc, char **argv)
     temp_list.clear();
     
     print_count_total(coins_grouped);
+    
+    // draw the ellipses
+    cv::Mat imageEllipse = cv::imread(argv[1], cv::IMREAD_COLOR);
+    for(int i = 0; i < fittedEllipses.size(); i++)
+    {
+            cv::Scalar color = cv::Scalar(rand.uniform(0, 256), rand.uniform(0,256), rand.uniform(0,256));
+            cv::ellipse(imageEllipse, fittedEllipses[i], color, 2);
+    }
+    
+    for(int i = 0; i < 4; i++)
+    {
+    	for(int j = 0; j < coins_grouped[i].size(); j++)
+    	{
+    		cv::ellipse(imageEllipse, coins_grouped[i][j], coin_color(i), 2);
+    	}
+    }
+
+    // display the images
+    cv::imshow("imageIn", imageIn);
+    //cv::imshow("imageGray", imageGray);
+    //cv::imshow("imageEdges", imageEdges);
+    //cv::imshow("edges dilated", edgesDilated);
+    //cv::imshow("edges eroded", edgesEroded);
+    //cv::imshow("imageContours", imageContours);
+    //cv::imshow("imageRectangles", imageRectangles);
+    cv::imshow("imageEllipse", imageEllipse);
+        
+    cv::waitKey();
     
     //for(int i = 0; i < fittedEllipses.size(); i++)
     	//std::cout << fittedEllipses[i].size.width << std::endl;
