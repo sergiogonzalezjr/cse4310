@@ -36,8 +36,8 @@ This program was built on top of the existing 'cv_ellipse'.
 // configuration parameters
 #define NUM_COMNMAND_LINE_ARGUMENTS 1
 
-int dime_count, penny_count, nickel_count, quarter_count, coin_group = 0;
-
+//int dime_count, penny_count, nickel_count, quarter_count, coin_group = 0;
+/*
 void coin_ticker()
 {
 	if(coin_group == 0)
@@ -48,15 +48,15 @@ void coin_ticker()
 		nickel_count++;
 	else if(coin_group == 3)
 		quarter_count++;
-}
+}*/
 
-void print_count_total()
+void print_count_total(std::vector<std::vector<cv::RotatedRect>> coins_grouped)
 {
-        std::cout << "Penny - " << penny_count << std::endl;
-        std::cout << "Nickel - " << nickel_count << std::endl;
-        std::cout << "Dime - " << dime_count << std::endl;
-        std::cout << "Quarter - " << quarter_count << std::endl;
-	std::cout << "Total - $" << (dime_count * 0.1) + (penny_count * 0.01) + (nickel_count * 0.05) + (quarter_count * 0.25) << std::endl;
+        std::cout << "Penny - " << coins_grouped[1].size() << std::endl;
+        std::cout << "Nickel - " << coins_grouped[2].size() << std::endl;
+        std::cout << "Dime - " << coins_grouped[0].size() << std::endl;
+        std::cout << "Quarter - " << coins_grouped[3].size() << std::endl;
+	std::cout << "Total - $" << (coins_grouped[0].size() * 0.1) + (coins_grouped[1].size() * 0.01) + (coins_grouped[2].size() * 0.05) + (coins_grouped[3].size() * 0.25) << std::endl;
 }
 
 // subroutine for sorting ellipse by major semi-axis
@@ -66,12 +66,12 @@ bool ellipse_sorter(cv::RotatedRect const& e1, cv::RotatedRect const& e2)
 }
 
 // finds average of vector of ints
-int average(std::vector<int> list)
+int average(std::vector<cv::RotatedRect> list)
 {
 	int sum = 0;
 	
 	for(int i = 0; i < list.size(); i++)
-		sum += list[i];
+		sum += list[i].size.width;
 		
 	return (sum / list.size());
 }
@@ -217,32 +217,40 @@ int main(int argc, char **argv)
     
     
     
-    std::vector<int> temp_list;  // will be used to hold major semi-axis data
+    std::vector<std::vector<cv::RotatedRect>> coins_grouped;  // will be used to hold major semi-axis data
+    std::vector<cv::RotatedRect> temp_list;
+    int coin_group = 0;
     
     for(int i = 0; i < fittedEllipses.size();  i++)
     {
 	if(temp_list.empty())
 	{
-		temp_list.push_back(fittedEllipses[i].size.width);
-		coin_ticker();
-		//std::cout << "EMPTY\t" << coin_group << ":\t" << dime_count << "\t" << penny_count << "\t" << nickel_count << "\t" << quarter_count << std::endl;
+		temp_list.push_back(fittedEllipses[i]);
+		//coin_ticker();
+		std::cout << i << " EMPTY\t" << coin_group << "\t" << temp_list.size() << std::endl;
 		continue;
 	}
 	
 	if(average(temp_list) * 1.05 >= fittedEllipses[i].size.width)
 	{
-		coin_ticker();
+		temp_list.push_back(fittedEllipses[i]);
+		//coin_ticker();
 	}
 	else
 	{
+		coins_grouped.push_back(temp_list);
 		temp_list.clear();
 		coin_group++;
 		i--;
 	}
-	//std::cout << "     \t" << coin_group << ":\t" << dime_count << "\t" << penny_count << "\t" << nickel_count << "\t" << quarter_count << std::endl;
+	std::cout << i << "      \t" << coin_group << "\t" << temp_list.size() << std::endl;
+	
     }
     
-    print_count_total();
+    coins_grouped.push_back(temp_list);
+    temp_list.clear();
+    
+    print_count_total(coins_grouped);
     
     //for(int i = 0; i < fittedEllipses.size(); i++)
     	//std::cout << fittedEllipses[i].size.width << std::endl;
