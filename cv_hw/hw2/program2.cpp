@@ -36,9 +36,44 @@ This program was built on top of the existing 'cv_ellipse'.
 // configuration parameters
 #define NUM_COMNMAND_LINE_ARGUMENTS 1
 
+int dime_count, penny_count, nickel_count, quarter_count, coin_group = 0;
+
+void coin_ticker()
+{
+	if(coin_group == 0)
+		dime_count++;
+	else if(coin_group == 1)
+		penny_count++;
+	else if(coin_group == 2)
+		nickel_count++;
+	else if(coin_group == 3)
+		quarter_count++;
+}
+
+void print_count_total()
+{
+        std::cout << "Penny - " << penny_count << std::endl;
+        std::cout << "Nickel - " << nickel_count << std::endl;
+        std::cout << "Dime - " << dime_count << std::endl;
+        std::cout << "Quarter - " << quarter_count << std::endl;
+	std::cout << "Total - $" << (dime_count * 0.1) + (penny_count * 0.01) + (nickel_count * 0.05) + (quarter_count * 0.25) << std::endl;
+}
+
+// subroutine for sorting ellipse by major semi-axis
 bool ellipse_sorter(cv::RotatedRect const& e1, cv::RotatedRect const& e2)
 {
 	return e1.size.width < e2.size.width;
+}
+
+// finds average of vector of ints
+int average(std::vector<int> list)
+{
+	int sum = 0;
+	
+	for(int i = 0; i < list.size(); i++)
+		sum += list[i];
+		
+	return (sum / list.size());
 }
 
 /*******************************************************************************************************************//**
@@ -71,9 +106,9 @@ int main(int argc, char **argv)
     }
 
     // get the image size
-    std::cout << "image width: " << imageIn.size().width << std::endl;
-    std::cout << "image height: " << imageIn.size().height << std::endl;
-    std::cout << "image channels: " << imageIn.channels() << std::endl;
+    //std::cout << "image width: " << imageIn.size().width << std::endl;
+    //std::cout << "image height: " << imageIn.size().height << std::endl;
+    //std::cout << "image channels: " << imageIn.channels() << std::endl;
 
     // convert the image to grayscale
     cv::Mat imageGray;
@@ -167,9 +202,10 @@ int main(int argc, char **argv)
     // sort by major major semi-axis of ellipses
     std::sort(fittedEllipses.begin(), fittedEllipses.end(), &ellipse_sorter);
     
+    //tossing out junk entries
     while(1)
     {
-    	if(fittedEllipses[0].size.width != 0)
+    	if(fittedEllipses[0].size.width > 20)
     	{
     		break;
     	}
@@ -179,7 +215,36 @@ int main(int argc, char **argv)
     	}
     }
     
-    for(int i = 0; i < fittedEllipses.size(); i++)
-    	std::cout << fittedEllipses[i].size.width << std::endl;
+    
+    
+    std::vector<int> temp_list;  // will be used to hold major semi-axis data
+    
+    for(int i = 0; i < fittedEllipses.size();  i++)
+    {
+	if(temp_list.empty())
+	{
+		temp_list.push_back(fittedEllipses[i].size.width);
+		coin_ticker();
+		//std::cout << "EMPTY\t" << coin_group << ":\t" << dime_count << "\t" << penny_count << "\t" << nickel_count << "\t" << quarter_count << std::endl;
+		continue;
+	}
+	
+	if(average(temp_list) * 1.05 >= fittedEllipses[i].size.width)
+	{
+		coin_ticker();
+	}
+	else
+	{
+		temp_list.clear();
+		coin_group++;
+		i--;
+	}
+	//std::cout << "     \t" << coin_group << ":\t" << dime_count << "\t" << penny_count << "\t" << nickel_count << "\t" << quarter_count << std::endl;
+    }
+    
+    print_count_total();
+    
+    //for(int i = 0; i < fittedEllipses.size(); i++)
+    	//std::cout << fittedEllipses[i].size.width << std::endl;
 }
 
