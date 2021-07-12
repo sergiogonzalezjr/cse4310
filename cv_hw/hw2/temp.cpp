@@ -30,11 +30,27 @@ This program was built on top of the existing 'cv_ellipse'.
 
 // include necessary dependencies
 #include <iostream>
+#include <cmath>
 #include <string>
 #include "opencv2/opencv.hpp"
 
 // configuration parameters
 #define NUM_COMNMAND_LINE_ARGUMENTS 1
+
+//int dime_count, penny_count, nickel_count, quarter_count, coin_group = 0;
+/*
+void coin_ticker()
+{
+	if(coin_group == 0)
+		dime_count++;
+	else if(coin_group == 1)
+		penny_count++;
+	else if(coin_group == 2)
+		nickel_count++;
+	else if(coin_group == 3)
+		quarter_count++;
+}*/
+    cv::Mat imageIn;
 
 void print_count_total(std::vector<std::vector<cv::RotatedRect>> coins_grouped)
 {
@@ -51,18 +67,61 @@ bool ellipse_sorter(cv::RotatedRect const& e1, cv::RotatedRect const& e2)
 	return e1.size.width < e2.size.width;
 }
 
-// finds average of vector of ints
-int average(std::vector<cv::RotatedRect> list)
+// finds average of major semi-axis
+double average(std::vector<cv::RotatedRect> list)
 {
-	int sum = 0;
+	double sum = 0;
 	
 	for(int i = 0; i < list.size(); i++)
-		sum += list[i].size.width;
+		sum += (double)list[i].size.width;
 		
 	return (sum / list.size());
 }
 
-// returns the color for respective coin
+// finds average of list of doubles
+double average(std::vector<double> list)
+{
+	double sum = 0;
+	
+	for(int i = 0; i < list.size(); i++)
+		sum += list[i];
+		
+	return (sum / list.size());
+}
+
+bool is_inside_ellipse(cv::Point probe, cv::RotatedRect ellipse)
+{
+	double res = ((pow(probe.x - ellipse.center.x, 2) / pow(ellipse.size.width, 2)) + (pow(probe.y - ellipse.center.y, 2) / pow(ellipse.size.height, 2)));
+	
+	if(res < 0.15)
+	{
+		return true;
+	}
+		
+	return false;
+}
+
+// returns average red response in a RotatedRect
+double average_red(cv::RotatedRect penny)
+{
+	cv::Rect brect = penny.boundingRect();
+	std::vector<double> red; // response in red channel for points inside ellipse
+	
+	for(int y = brect.y; y < brect.y + brect.height; y++)
+	{
+		for(int x = brect.x; x < brect.x + brect.width; x++)
+		{
+			if(is_inside_ellipse(cv::Point(x,y), penny))
+			{
+				red.push_back((double)imageIn.at<cv::Vec3b>(y,x)[2]);
+				imageIn.at<cv::Vec3b>(y,x) = cv::Vec3b(255,255,255);
+			}
+		}
+	}
+	
+	return average(red);
+}
+
 cv::Scalar coin_color(int coin_group)
 {
 	if(coin_group == 0)
@@ -84,7 +143,7 @@ cv::Scalar coin_color(int coin_group)
  **********************************************************************************************************************/
 int main(int argc, char **argv)
 {
-    cv::Mat imageIn;
+    //cv::Mat imageIn;
 
     // validate and parse the command line arguments
     if(argc != NUM_COMNMAND_LINE_ARGUMENTS + 1)
@@ -103,6 +162,11 @@ int main(int argc, char **argv)
             return 0;
         }
     }
+
+    // get the image size
+    //std::cout << "image width: " << imageIn.size().width << std::endl;
+    //std::cout << "image height: " << imageIn.size().height << std::endl;
+    //std::cout << "image channels: " << imageIn.channels() << std::endl;
 
     // convert the image to grayscale
     cv::Mat imageGray;
@@ -123,7 +187,8 @@ int main(int argc, char **argv)
     cv::erode(edgesDilated, edgesEroded, cv::Mat(), cv::Point(-1, -1), morphologySize);
     
     // locate the image contours (after applying a threshold or canny)
-    std::vector<std::vector<cv::Point>> contours;
+    std::vector<std::vector<cv::Point> > contours;
+    //std::vector<int> hierarchy;
     cv::findContours(edgesEroded, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
 
     // draw the contours
@@ -170,7 +235,126 @@ int main(int argc, char **argv)
     // sort by major major semi-axis of ellipses
     std::sort(fittedEllipses.begin(), fittedEllipses.end(), &ellipse_sorter);
     
-    //tossing out junk entries (noise)
+    // NEW TEST BELOW
+    //tossing out junk entries
+    while(1)
+    {
+    	if(fittedEllipses[0].size.width > 20)
+    	{
+    		break;
+    	}
+    	else
+    	{
+    		fittedEllipses.erase(fittedEllipses.begin());
+    	}
+    }
+    
+    std::vector<std::vector<cv::RotatedRect>> coins_grouped;  // will be used to hold coins in respective groups
+    std::vector<cv::RotatedRect> temp_list;
+    
+    std::vector<cv::Point> coin_points;
+    std::vector<double> red_rects; // average response in red channel for each respective rotated rect, will be used to classify penny
+    
+    for(int i = 0; i < fittedEllipses.size(); i++)
+    {
+    	red_rects.push_back(average_red(fittedEllipses[i]));
+    }
+    	
+    std::sort(red_rects.begin(), red_rects.end());
+    
+    for(int i = 0; i < red_rects.size(); i++)
+    {
+    	std::cout << red_rects[i] << std::endl;
+    }
+    
+    cv::imshow("imageIn", imageIn);
+    cv::waitKey(0);
+    //temp_list.push_back(fittedEllipses[0]); // there will always be at least one penny
+    //red_rects.push_back(average_red(imageIn, fittedEllipses[0]));
+    /*
+    for(int i = 1; i < fittedEllipses.size(); i++)
+    {
+    	double avg_red = average_red(imageIn, fittedEllipses[i]);
+	if((average(red_rects) * 1.1 >= avg_red) && (average(red_rects) * 0.9 <= avg_red))
+	{
+		temp_list.push_back(fittedEllipses[i]);
+		red_rects.push_back(avg_red);
+		//coin_ticker();
+	}
+	else
+		break;
+    }
+    
+    coins_grouped.push_back(temp_list);
+    temp_list.clear();
+    
+    int coin_group = 0;
+    
+    for(int i = coins_grouped[0].size(); i < fittedEllipses.size();  i++)
+    {
+	if(temp_list.empty())
+	{
+		temp_list.push_back(fittedEllipses[i]);
+		//coin_ticker();
+		//std::cout << i << " EMPTY\t" << coin_group << "\t" << temp_list.size() << std::endl;
+		continue;
+	}
+	
+	if(average(temp_list) * 1.1 >= fittedEllipses[i].size.width)
+	{
+		temp_list.push_back(fittedEllipses[i]);
+		//coin_ticker();
+	}
+	else
+	{
+		coins_grouped.push_back(temp_list);
+		temp_list.clear();
+		coin_group++;
+		i--;
+	}
+	//std::cout << i << "      \t" << coin_group << "\t" << temp_list.size() << std::endl;
+	
+    }
+    
+    coins_grouped.push_back(temp_list);
+    temp_list.clear();
+    
+    print_count_total(coins_grouped);
+    
+    // draw the ellipses
+    cv::Mat imageEllipse = cv::imread(argv[1], cv::IMREAD_COLOR);
+    
+    for(int i = 0; i < 4; i++)
+    {
+    	std::cout << coins_grouped[i].size() << std::endl;
+    	for(int j = 0; j < coins_grouped[i].size(); j++)
+    	{
+    		cv::ellipse(imageEllipse, coins_grouped[i][j], coin_color(i), 2);
+    	}
+    }
+    
+    //for(int i = 0; i < coins_grouped[0].size(); i++)
+    //	std::cout << coins_grouped[0][i].size.width << std::endl;
+
+    // display the images
+    cv::imshow("imageIn", imageIn);
+    //cv::imshow("imageGray", imageGray);
+    //cv::imshow("imageEdges", imageEdges);
+    //cv::imshow("edges dilated", edgesDilated);
+    //cv::imshow("edges eroded", edgesEroded);
+    //cv::imshow("imageContours", imageContours);
+    //cv::imshow("imageRectangles", imageRectangles);
+    cv::imshow("imageEllipse", imageEllipse);
+        
+    	
+    cv::waitKey(0);
+    */
+    /*
+    for(int i = 0; i < fittedEllipses.size(); i++)
+    	std::cout << fittedEllipses[i].size.width << std::endl;*/
+    
+    /* WORKING
+    //tossing out junk entries
     while(1)
     {
     	if(fittedEllipses[0].size.width > 20)
@@ -187,27 +371,31 @@ int main(int argc, char **argv)
     
     std::vector<std::vector<cv::RotatedRect>> coins_grouped;  // will be used to hold major semi-axis data
     std::vector<cv::RotatedRect> temp_list;
+    int coin_group = 0;
     
-    // go up sorted array, if the semi-major axis of the entry above is within 5 percent of the
-    // average of below entries, add to the coin group
     for(int i = 0; i < fittedEllipses.size();  i++)
     {
 	if(temp_list.empty())
 	{
 		temp_list.push_back(fittedEllipses[i]);
+		//coin_ticker();
+		//std::cout << i << " EMPTY\t" << coin_group << "\t" << temp_list.size() << std::endl;
 		continue;
 	}
 	
 	if(average(temp_list) * 1.05 >= fittedEllipses[i].size.width)
 	{
 		temp_list.push_back(fittedEllipses[i]);
+		//coin_ticker();
 	}
 	else
 	{
 		coins_grouped.push_back(temp_list);
 		temp_list.clear();
+		coin_group++;
 		i--;
 	}
+	//std::cout << i << "      \t" << coin_group << "\t" << temp_list.size() << std::endl;
 	
     }
     
@@ -218,7 +406,13 @@ int main(int argc, char **argv)
     
     // draw the ellipses
     cv::Mat imageEllipse = cv::imread(argv[1], cv::IMREAD_COLOR);
-
+    /*
+    for(int i = 0; i < fittedEllipses.size(); i++)
+    {
+            cv::Scalar color = cv::Scalar(rand.uniform(0, 256), rand.uniform(0,256), rand.uniform(0,256));
+            cv::ellipse(imageEllipse, fittedEllipses[i], color, 2);
+    }
+    
     for(int i = 0; i < 4; i++)
     {
     	for(int j = 0; j < coins_grouped[i].size(); j++)
@@ -229,9 +423,17 @@ int main(int argc, char **argv)
 
     // display the images
     cv::imshow("imageIn", imageIn);
+    //cv::imshow("imageGray", imageGray);
+    //cv::imshow("imageEdges", imageEdges);
+    //cv::imshow("edges dilated", edgesDilated);
+    //cv::imshow("edges eroded", edgesEroded);
+    //cv::imshow("imageContours", imageContours);
+    //cv::imshow("imageRectangles", imageRectangles);
     cv::imshow("imageEllipse", imageEllipse);
-       
-    // close on any keypress
+        
     cv::waitKey(0);
+    
+    for(int i = 0; i < fittedEllipses.size(); i++)
+    	std::cout << fittedEllipses[i].size.width << std::endl;*/
 }
 
