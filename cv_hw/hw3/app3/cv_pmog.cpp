@@ -32,6 +32,8 @@ This program was built using the existing cv_pmog as a base.
 #include <iostream>
 #include <cstdio>
 #include "opencv2/opencv.hpp"
+#include <opencv2/tracking.hpp>
+//#include <opencv2/core/oc1.hpp>
 
 // configuration parameters
 #define NUM_COMNMAND_LINE_ARGUMENTS 1
@@ -111,15 +113,33 @@ int main(int argc, char **argv)
     cv::Ptr<cv::BackgroundSubtractor> pMOG2; //MOG2 Background subtractor
     pMOG2 = cv::createBackgroundSubtractorMOG2(bgHistory, bgThreshold, bgShadowDetection);
     
+    std::vector<std::vector<cv::Ptr<cv::Tracker>>> trackers(4);
+    std::vector<std::vector<cv::Rect>> track_roi(4);
+    //cv::Ptr<cv::Tracker> tracker_1 = cv::TrackerCSRT::create();
+    
     cv::Rect gate1(cv::Point(238,0), cv::Point(401,10));
     cv::Rect gate2(cv::Point(238,40), cv::Point(401,60));
     cv::Rect gate3(cv::Point(238,145), cv::Point(401,185));
     cv::Rect gate4(cv::Point(238,230), cv::Point(401,270));
     
+    cv::Rect roi_1(cv::Point(0,145), cv::Point(163,205));
+    cv::Rect roi_1_activation(cv::Point(143,145), cv::Point(163,205));
+    
+    cv::Rect roi_2(cv::Point(0,220), cv::Point(163,280));
+    cv::Rect roi_2_activation(cv::Point(143,220), cv::Point(163,280));
+    
+    cv::Rect roi_3(cv::Point(476,0), cv::Point(639,20));
+    cv::Rect roi_3_activation(cv::Point(476,0), cv::Point(496,10));
+    
+    cv::Rect roi_4(cv::Point(476,30), cv::Point(639,90));
+    cv::Rect roi_4_activation(cv::Point(476,30), cv::Point(496,90));
+    
     int gate_status[4];
+    int track_status[4];
     for(int i = 0; i < 4; i++)
     {
     	gate_status[i] = 0;
+    	track_status[i] = 0;
     }
 
     bool print = false;
@@ -233,7 +253,7 @@ int main(int argc, char **argv)
 	    		restart = true;
 	    	}
 	    }	    
-	    
+	    /*
 	    frameRectangles = cv::Mat::zeros(edgesEroded.size(), CV_8UC3);
 	    for(int i = 0; i < minAreaRect.size(); i++)
 	    {
@@ -244,14 +264,84 @@ int main(int argc, char **argv)
 	    	{
 	    		cv::line(captureFrame, rectanglePoints[j], rectanglePoints[(j+1) % 4], cv::Scalar(rand.uniform(0,256), rand.uniform(0,256), rand.uniform(0,256)));
 	    	}
+	    }*/
+	    
+	    int track_activation_count[4];
+	    
+	    track_activation_count[0] =  white_count(fgClone(roi_1_activation));
+	    track_activation_count[1] =  white_count(fgClone(roi_2_activation));
+	    track_activation_count[2] =  white_count(fgClone(roi_3_activation));
+	    track_activation_count[3] =  white_count(fgClone(roi_4_activation));
+	    
+	    for(int i = 0; i < 4; i++)
+	    {
+	    	if((track_activation_count[i] >= 100) && (track_status[i] == 0))
+	    	{	  /*  		
+	    		if(i==0)
+	    		{
+	    			trackers[0].push_back(cv::TrackerCSRT::create());
+	    			trackers[0][trackers[0].size()-1]->init(captureFrame, roi_1);
+	    			track_status[i] = 1;
+	    		}*/
+	    		trackers[i].push_back(cv::TrackerCSRT::create());
+	    		
+	    		if(i == 0)
+	    		{
+	    			track_roi[i].push_back(cv::Rect(cv::Point(0, 145), cv::Point(163, 205)));
+	    		}
+	    		else if(i == 1)
+	    		{
+	    			track_roi[i].push_back(cv::Rect(cv::Point(0, 220), cv::Point(163, 280)));
+	    		}
+	    		else if(i == 2)
+	    		{
+	    			track_roi[i].push_back(cv::Rect(cv::Point(476, 0), cv::Point(639, 20)));
+	    		}
+	    		else
+	    		{
+	    			track_roi[i].push_back(cv::Rect(cv::Point(476, 30), cv::Point(639, 90)));
+	    		}
+	    		trackers[i][trackers[i].size()-1]->init(captureFrame, track_roi[i][track_roi[i].size()-1]);
+	    		track_status[i] = 1;
+	    		
+	    	}
+	    	else if(track_activation_count[i] <= 10)
+	    	{
+	    		track_status[i] = 0;
+	    	}
 	    }
 	    
+	    for(int i = 0; i < 4; i++)
+	    {
+	    	for(int j = 0; j < trackers[i].size(); j++)
+	    	{
+	    		trackers[i][j]->update(captureFrame, track_roi[i][j]);
+	    		//std::cout << "updated" << std::endl;
+	    		cv::rectangle(captureFrame, track_roi[i][j], cv::Scalar(0,255,0),1,cv::LINE_8, 0);
+	    	}
+	    }
 	    
+	    cv::rectangle(fgClone, roi_1, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
+	    cv::rectangle(fgClone, roi_1_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
+	    
+	    cv::rectangle(fgClone, roi_2, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
+	    cv::rectangle(fgClone, roi_2_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
+	    
+	    cv::rectangle(fgClone, roi_3, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
+	    cv::rectangle(fgClone, roi_3_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
+	    
+	    cv::rectangle(fgClone, roi_4, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
+	    cv::rectangle(fgClone, roi_4_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
+	    
+	    cv::line(captureFrame, cv::Point(620,0), cv::Point(620,479), cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
+	    
+	    /*
 	    cv::rectangle(captureFrame, gate1, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
 	    cv::rectangle(captureFrame, gate2, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
 	    cv::rectangle(captureFrame, gate3, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
 	    cv::rectangle(captureFrame, gate4, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    
+	    */
+	    // COUNTER LOGIC
 	    int gate_activation_count[4];
 	    
 	    gate_activation_count[0] =  white_count(fgClone(gate1));
@@ -268,13 +358,12 @@ int main(int argc, char **argv)
 	    		if(i < 2)
 	    		{
 	    			westbound_count++;
-	    			print = true;
 	    		}
 	    		else
 	    		{
 	    			eastbound_count++;
 	    		}
-	    		//print = true;
+	    		print = true;
 	    	}
 	    	else if(gate_activation_count[i] <= 10)
 	    	{
@@ -324,7 +413,7 @@ int main(int argc, char **argv)
 	    //cv::line(captureFrame, cv::Point(0, 25), cv::Point(639, 25), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
 	    
             cv::imshow("captureFrame", captureFrame);
-	    //cv::imshow("fgClone", fgClone);
+	    cv::imshow("fgClone", fgClone);
 	    //cv::imshow("fgEdges", fgEdges);
 	    //cv::imshow("frameRectangles", frameRectangles);
 
