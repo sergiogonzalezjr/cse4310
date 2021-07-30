@@ -45,11 +45,13 @@ This program was built using the existing cv_pmog as a base, and some merging wa
  * @return return code (0 for normal termination)
  * @author Christoper D. McMurrough
  **********************************************************************************************************************/
+ // std::sort subroutine
  bool rectangle_sorter(cv::RotatedRect const& e1, cv::RotatedRect const& e2)
  {
  	return e1.size.width < e2.size.width;
  }
  
+ // count of white pixels in a region
  int white_count(cv::Mat snap)
  {
  	int white_count = 0;
@@ -109,9 +111,10 @@ int main(int argc, char **argv)
     cv::Ptr<cv::BackgroundSubtractor> pMOG2; //MOG2 Background subtractor
     pMOG2 = cv::createBackgroundSubtractorMOG2(bgHistory, bgThreshold, bgShadowDetection);
     
-    std::vector<std::vector<cv::Ptr<cv::Tracker>>> trackers(4);
-    std::vector<std::vector<cv::Rect>> track_roi(4);
+    std::vector<std::vector<cv::Ptr<cv::Tracker>>> trackers(4); // array of trackers for corresponding lanes
+    std::vector<std::vector<cv::Rect>> track_roi(4); // array of roi, corresponds to same index of tracker
     
+    // traffic counting gates followed by activation gates for triggering trackers
     cv::Rect gate1(cv::Point(238,0), cv::Point(401,10));
     cv::Rect gate2(cv::Point(238,40), cv::Point(401,60));
     cv::Rect gate3(cv::Point(238,145), cv::Point(401,185));
@@ -130,6 +133,8 @@ int main(int argc, char **argv)
     cv::Rect roi_4(cv::Point(476,30), cv::Point(639,90));
     cv::Rect roi_4_activation(cv::Point(476,50), cv::Point(496,90));
     
+    
+    //below arrays are used for cooldowns of trigger zones
     int gate_status[4];
     int track_status[4];
     for(int i = 0; i < 4; i++)
@@ -157,19 +162,19 @@ int main(int argc, char **argv)
         bool captureSuccess = capture.read(captureFrame);
         if(captureSuccess)
         {
-			// pre-process the raw image frame
+	    // pre-process the raw image frame
             const int rangeMin = 0;
             const int rangeMax = 255;
             cv::cvtColor(captureFrame, grayFrame, cv::COLOR_BGR2GRAY);
             cv::normalize(grayFrame, grayFrame, rangeMin, rangeMax, cv::NORM_MINMAX, CV_8UC1);
 
-			// extract the foreground mask from image
-			pMOG2->apply(grayFrame, fgMask);
+	    // extract the foreground mask from image
+	    pMOG2->apply(grayFrame, fgMask);
 
-	    //fgClone = cv::Mat::zeros(fgMask.size(), CV_8UC3);
 	    fgClone = fgMask.clone();
 	    cv::cvtColor(fgClone, fgClone, cv::COLOR_GRAY2BGR);
 	    
+	    // separate lanes
 	    cv::line(fgClone, cv::Point(0, 26), cv::Point(639, 26), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
 	    cv::line(fgClone, cv::Point(0, 90), cv::Point(639, 90), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
 	    cv::line(fgClone, cv::Point(0, 140), cv::Point(639, 140), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
@@ -177,7 +182,7 @@ int main(int argc, char **argv)
 	    
 	    
 	    int track_activation_count[4];
-	    
+	    // white pixel count in activation zones for trackers
 	    track_activation_count[0] =  white_count(fgClone(roi_1_activation));
 	    track_activation_count[1] =  white_count(fgClone(roi_2_activation));
 	    track_activation_count[2] =  white_count(fgClone(roi_3_1_activation));
@@ -216,6 +221,7 @@ int main(int argc, char **argv)
 	    	}
 	    }
 	    
+	    // update rectangles or get rid of rectangles if vehicle is getting out of sight
 	    for(int i = 0; i < 4; i++)
 	    {
 	    	for(int j = 0; j < trackers[i].size(); j++)
@@ -253,13 +259,11 @@ int main(int argc, char **argv)
 	    
 	    cv::rectangle(fgClone, roi_4, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
 	    cv::rectangle(fgClone, roi_4_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
-	    
-	    //cv::line(captureFrame, cv::Point(99,0), cv::Point(99,479), cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    //cv::line(captureFrame, cv::Point(540,0), cv::Point(540,479), cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
 
 	    // COUNTER LOGIC
 	    int gate_activation_count[4];
 	    
+	    // count of white pixels in traffic counter zones
 	    gate_activation_count[0] =  white_count(fgClone(gate1));
 	    gate_activation_count[1] =  white_count(fgClone(gate2));
 	    gate_activation_count[2] =  white_count(fgClone(gate3));
@@ -304,7 +308,6 @@ int main(int argc, char **argv)
         if(captureSuccess)
         {
             cv::imshow("captureFrame", captureFrame);
-	    cv::imshow("fgClone", fgClone);
 
             // get the number of milliseconds per frame
             int delayMs = (1.0 / captureFPS) * 1000;
