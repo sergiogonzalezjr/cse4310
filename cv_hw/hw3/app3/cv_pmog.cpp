@@ -2,7 +2,7 @@
 Sergio Gonzalez
 CSE 4310 HW3
 
-This program was built using the existing cv_pmog as a base.
+This program was built using the existing cv_pmog as a base, and some merging was done with cv_tracking.
 */
 
 //
@@ -101,11 +101,7 @@ int main(int argc, char **argv)
     int captureFPS = static_cast<int>(capture.get(cv::CAP_PROP_FPS));
     std::cout << "Video source opened successfully (width=" << captureWidth << " height=" << captureHeight << " fps=" << captureFPS << ")!" << std::endl;
 
-    // create image window
-    //cv::namedWindow("captureFrame", cv::WINDOW_AUTOSIZE);
-	//cv::namedWindow("fgMask", cv::WINDOW_AUTOSIZE);
-
-	// set background filtering parameters
+    // set background filtering parameters
     const int bgHistory = 500;
     const float bgThreshold = 50;
     const bool bgShadowDetection = true;
@@ -115,7 +111,6 @@ int main(int argc, char **argv)
     
     std::vector<std::vector<cv::Ptr<cv::Tracker>>> trackers(4);
     std::vector<std::vector<cv::Rect>> track_roi(4);
-    //cv::Ptr<cv::Tracker> tracker_1 = cv::TrackerCSRT::create();
     
     cv::Rect gate1(cv::Point(238,0), cv::Point(401,10));
     cv::Rect gate2(cv::Point(238,40), cv::Point(401,60));
@@ -130,7 +125,6 @@ int main(int argc, char **argv)
     
     cv::Rect roi_3(cv::Point(476,0), cv::Point(639,20));
     cv::Rect roi_3_1_activation(cv::Point(476,10), cv::Point(516,20));
-    //cv::Rect roi_3_2_activation(cv::Point(516,0), cv::Point(556,5));
     cv::Rect roi_3_2_activation(cv::Point(556,0), cv::Point(596,5));
     
     cv::Rect roi_4(cv::Point(476,30), cv::Point(639,90));
@@ -150,7 +144,6 @@ int main(int argc, char **argv)
 	
     // process data until program termination
     bool doCapture = true;
-    int frameCount = 0;
     while(doCapture)
     {
         // get the start time
@@ -160,9 +153,7 @@ int main(int argc, char **argv)
         cv::Mat captureFrame;
         cv::Mat grayFrame;
         cv::Mat fgClone;
-        cv::Mat fgEdges;
-        cv::Mat frameRectangles;
-        //cv::Mat processedFrame;
+
         bool captureSuccess = capture.read(captureFrame);
         if(captureSuccess)
         {
@@ -179,94 +170,11 @@ int main(int argc, char **argv)
 	    fgClone = fgMask.clone();
 	    cv::cvtColor(fgClone, fgClone, cv::COLOR_GRAY2BGR);
 	    
-	    //cv::line(captureFrame, cv::Point(0, 30), cv::Point(639, 30), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
 	    cv::line(fgClone, cv::Point(0, 26), cv::Point(639, 26), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
 	    cv::line(fgClone, cv::Point(0, 90), cv::Point(639, 90), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
 	    cv::line(fgClone, cv::Point(0, 140), cv::Point(639, 140), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
 	    cv::line(fgClone, cv::Point(0, 210), cv::Point(639, 210), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
 	    
-	    cv::Mat frameEdges;
-	    const double cannyThreshold1 = 50;
-	    const double cannyThreshold2 = 200;
-	    const int cannyAperture = 3;
-	    cv::Canny(fgClone, frameEdges, cannyThreshold1, cannyThreshold2, cannyAperture);
-	    
-	    // erode and dilate
-	    int morphologySize = 2;
-	    cv::Mat edgesDilated;
-	    cv::dilate(frameEdges, edgesDilated, cv::Mat(), cv::Point(-1,-1), morphologySize);
-	    cv::Mat edgesEroded;
-	    cv::erode(edgesDilated, edgesEroded, cv::Mat(), cv::Point(-1,-1), morphologySize);
-	    
-	    std::vector<std::vector<cv::Point>> frameContours;
-	    cv::findContours(edgesEroded, frameContours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point(0,0));
-	    
-	    //std::sort(frameContours.begin(), frameContours.end(), &vector_sorter);
-	    
-	    int t = frameContours.size();
-	    bool restart = false;
-	    for(int i = 0; i < t; i++)
-	    {
-	    	if(restart == true)
-	    	{
-	    		i = 0;
-	    		restart = false;
-	    	}
-	    	if(frameContours[i].size() <= 5)
-	    	{
-	    		frameContours.erase(frameContours.begin()+i);	    		
-	    		t = frameContours.size();
-	    		restart = true;
-	    	}
-	    }
-	    //std::cout<< "outside" << std::endl;
-	    
-	    cv::RNG rand(1234567);
-	    
-	    fgEdges = cv::Mat::zeros(frameEdges.size(), CV_8UC3);
-	    
-	    for(int i = 0; i < frameContours.size(); i++)
-	    {
-	    	cv::drawContours(fgEdges, frameContours, i, cv::Scalar(rand.uniform(0,256), rand.uniform(0,256), rand.uniform(0,256)));
-	    }
-	    
-	    std::vector<cv::RotatedRect> minAreaRect(frameContours.size());
-
-	    for(int i = 0; i < frameContours.size(); i++)
-	    {
-	    	minAreaRect[i] = cv::minAreaRect(frameContours[i]);
-	    
-	    }
-	    
-	    restart = false;
-	    t = minAreaRect.size();
-	    for(int i = 0; i < t; i++)
-	    {
-	    	if(restart == true)
-	    	{
-	    		i = 0;
-	    		restart = false;
-	    	}
-	    	
-	    	if(minAreaRect[i].size.width < 100)
-	    	{
-	    		minAreaRect.erase(minAreaRect.begin()+i);	    		
-	    		t = minAreaRect.size();
-	    		restart = true;
-	    	}
-	    }	    
-	    /*
-	    frameRectangles = cv::Mat::zeros(edgesEroded.size(), CV_8UC3);
-	    for(int i = 0; i < minAreaRect.size(); i++)
-	    {
-	    	cv::Point2f rectanglePoints[4];
-	    	minAreaRect[i].points(rectanglePoints);
-	    	
-	    	for(int j = 0; j < 4; j++)
-	    	{
-	    		cv::line(captureFrame, rectanglePoints[j], rectanglePoints[(j+1) % 4], cv::Scalar(rand.uniform(0,256), rand.uniform(0,256), rand.uniform(0,256)));
-	    	}
-	    }*/
 	    
 	    int track_activation_count[4];
 	    
@@ -284,19 +192,19 @@ int main(int argc, char **argv)
 	    		
 	    		if(i == 0)
 	    		{
-	    			track_roi[i].push_back(cv::Rect(cv::Point(0, 145), cv::Point(163, 205)));
+	    			track_roi[i].push_back(cv::Rect(cv::Point(0, 145), cv::Point(155, 205)));
 	    		}
 	    		else if(i == 1)
 	    		{
-	    			track_roi[i].push_back(cv::Rect(cv::Point(0, 220), cv::Point(163, 280)));
+	    			track_roi[i].push_back(cv::Rect(cv::Point(0, 220), cv::Point(155, 280)));
 	    		}
 	    		else if(i == 2)
 	    		{
-	    			track_roi[i].push_back(cv::Rect(cv::Point(476, 0), cv::Point(639, 20)));
+	    			track_roi[i].push_back(cv::Rect(cv::Point(486, 0), cv::Point(619, 20)));
 	    		}
 	    		else
 	    		{
-	    			track_roi[i].push_back(cv::Rect(cv::Point(476, 30), cv::Point(639, 90)));
+	    			track_roi[i].push_back(cv::Rect(cv::Point(486, 30), cv::Point(619, 90)));
 	    		}
 	    		trackers[i][trackers[i].size()-1]->init(captureFrame, track_roi[i][track_roi[i].size()-1]);
 	    		track_status[i] = 1;
@@ -312,17 +220,23 @@ int main(int argc, char **argv)
 	    {
 	    	for(int j = 0; j < trackers[i].size(); j++)
 	    	{	
-	    		if( ((i < 2) && (track_roi[i][j].x >= 540)) || ((i >= 2) && (track_roi[i][j].x <= 80)) )
+	    		if(((i < 2) && (track_roi[i][j].x >= 540)) || ((i >= 2) && (track_roi[i][j].br().x <= 99)))
 	    		{
-	    			//trackers[i][j]->release();
 	    			trackers[i].erase(trackers[i].begin());
 	    			track_roi[i].erase(track_roi[i].begin());
 	    		}
 	    		else
 	    		{
 	    			trackers[i][j]->update(captureFrame, track_roi[i][j]);
-		    		//std::cout << "updated" << std::endl;
-		    		cv::rectangle(captureFrame, track_roi[i][j], cv::Scalar(0,255,0),1,cv::LINE_8, 0);
+	    			
+	    			if(i < 2)
+	    			{
+	    				cv::rectangle(captureFrame, track_roi[i][j], cv::Scalar(0,0,255),4,cv::LINE_8, 0);
+	    			}
+	    			else
+	    			{
+	    				cv::rectangle(captureFrame, track_roi[i][j], cv::Scalar(0,255,0),4,cv::LINE_8, 0);
+	    			}
 	    		}
 	    	}
 	    }
@@ -334,22 +248,15 @@ int main(int argc, char **argv)
 	    cv::rectangle(fgClone, roi_2_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
 	    
 	    cv::rectangle(fgClone, roi_3, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    //cv::rectangle(fgClone, roi_3_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
 	    cv::rectangle(fgClone, roi_3_1_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
 	    cv::rectangle(fgClone, roi_3_2_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
 	    
 	    cv::rectangle(fgClone, roi_4, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
 	    cv::rectangle(fgClone, roi_4_activation, cv::Scalar(0,255,255), 1, cv::LINE_8, 0);
 	    
-	    cv::line(captureFrame, cv::Point(79,0), cv::Point(79,479), cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    cv::line(captureFrame, cv::Point(540,0), cv::Point(540,479), cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    
-	    /*
-	    cv::rectangle(captureFrame, gate1, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    cv::rectangle(captureFrame, gate2, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    cv::rectangle(captureFrame, gate3, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    cv::rectangle(captureFrame, gate4, cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    */
+	    //cv::line(captureFrame, cv::Point(99,0), cv::Point(99,479), cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
+	    //cv::line(captureFrame, cv::Point(540,0), cv::Point(540,479), cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
+
 	    // COUNTER LOGIC
 	    int gate_activation_count[4];
 	    
@@ -379,52 +286,25 @@ int main(int argc, char **argv)
 	    		gate_status[i] = 0;
 	    	}
 	    }
-	    
-	    //std::cout << gate_activation_count[0] << "\t" << gate_activation_count[1] << "\t" << gate_activation_count[2] << "\t" << gate_activation_count[3] << "\n" << std::endl;
-	    
-	    
+
+	    	    
 	    if(print == true)
 	    {
 	    	std::cout << "WESTBOUND COUNT: " << westbound_count << "\nEASTBOUND COUNT: " << eastbound_count << "\n\n" << std::endl;
 	    	print = false;
 	    }
 	    
-	    
-	    //std::cout << gate_activation_count[0] << "\t" << gate_activation_count[1] << "\t" << gate_activation_count[2] << "\t" << gate_activation_count[3] << "\n" << std::endl;
-	    //std::cout << gate1.area() << "\t" << gate2.area() << "\t" << gate3.area() << "\t" << gate4.area() << std::endl;
-	    /*
-	    for(int i = 0; i < 5; i++)
-	    {
-	    	for(int j = 0; j < 3; j++)
-	    	{
-	    		if(i == 0)
-	    		{
-	    			cv::rectangle(fgClone, cv::Point(j * (640/3), 0), cv::Point((j+1) * (640/3), (i+1) * 20), cv::Scalar(0,0,255), 1, cv::LINE_8, 0);
-	    		}
-	    	}
-	    }*/
-	    //cv::rectangle(captureFrame, cv::Point(0, 0), cv::Point(320, 240), cv::Scalar(0,0,255), 10, cv::LINE_8, 0);
-	    //cv::rectangle(fgClone, cv::Point(0, 0), cv::Point(320, 240), cv::Scalar(255,255,255), 10, cv::LINE_8, 0);
-            // increment the frame counter
-            //frameCount++;
         }
         else
         {
-            //std::printf("Unable to acquire image frame! \n");
             return 0;
         }
 
         // update the GUI window if necessary
         if(captureSuccess)
         {
-	    //std::cout << "Frame opened successfully (width=" << fgMask.size().width << " height=" << fgMask.size().height << std::endl;
-	    //cv::line(captureFrame, cv::Point(0, 25), cv::Point(639, 25), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
-	    //cv::line(captureFrame, cv::Point(0, 25), cv::Point(639, 25), cv::Scalar(0,0,0), 5, cv::LINE_8, 0);
-	    
             cv::imshow("captureFrame", captureFrame);
 	    cv::imshow("fgClone", fgClone);
-	    //cv::imshow("fgEdges", fgEdges);
-	    //cv::imshow("frameRectangles", frameRectangles);
 
             // get the number of milliseconds per frame
             int delayMs = (1.0 / captureFPS) * 1000;
@@ -435,16 +315,6 @@ int main(int argc, char **argv)
                 doCapture = false;
             }
             
-        }
-
-        // compute the frame processing time
-        //double endTicks = static_cast<double>(cv::getTickCount());
-        //double elapsedTime = (endTicks - startTicks) / cv::getTickFrequency();
-        //std::cout << "Frame processing time: " << elapsedTime << std::endl;
-        
-        if(frameCount > 1500)
-        {
-            return 0;
         }
     }
 
