@@ -1,0 +1,3 @@
+/home/sergio/Documents/cse4310/cv_hw/hw4/CMakeFiles/rebuild_cache.dir
+/home/sergio/Documents/cse4310/cv_hw/hw4/CMakeFiles/edit_cache.dir
+/home/sergio/Documents/cse4310/cv_hw/hw4/CMakeFiles/pcl_headless.dir
