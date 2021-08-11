@@ -199,24 +199,58 @@ int main(int argc, char** argv)
         cloud_in->points.at(index).b = 255;
     }
 
-
+    // extract a cloud sans tabletop
     pcl::ExtractIndices<pcl::PointXYZRGBA> filter;
     filter.setInputCloud(cloud_in);
     filter.setIndices(plane_inliers);
     
     pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_clusters(new pcl::PointCloud<pcl::PointXYZRGBA>);
-    pcl::PointIndices::Ptr clusters_inliers(new pcl::PointIndices);
+    //pcl::PointIndices::Ptr clusters_inliers(new pcl::PointIndices);
     filter.setNegative(true);
     filter.setKeepOrganized(true);
     filter.filter(*cloud_clusters);
     
     // cloud downsample using voxel grid
-    const float voxelSize = 0.01;
+    /*const float voxelSize = 0.01;
     //pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudFiltered(new pcl::PointCloud<pcl::PointXYZRGBA>);
     pcl::VoxelGrid<pcl::PointXYZRGBA> voxFilter;
     voxFilter.setInputCloud(cloud_clusters);
     voxFilter.setLeafSize(static_cast<float>(voxelSize), static_cast<float>(voxelSize), static_cast<float>(voxelSize));
-    voxFilter.filter(*cloud_clusters);
+    voxFilter.filter(*cloud_clusters);*/
+    
+    // cluster
+    // create the vector of indices lists (each element contains a list of imultiple indices)
+    const float clusterDistance = 0.02;
+    int minClusterSize = 1000;
+    int maxClusterSize = 20000;
+    std::vector<pcl::PointIndices> clusters_inliers;
+
+    // Creating the KdTree object for the search method of the extraction
+    pcl::search::KdTree<pcl::PointXYZRGBA>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGBA>);
+    tree->setInputCloud(cloud_clusters);
+
+    // create the euclidian cluster extraction object
+    pcl::EuclideanClusterExtraction<pcl::PointXYZRGBA> ec;
+    ec.setClusterTolerance(clusterDistance);
+    ec.setMinClusterSize(minClusterSize);
+    ec.setMaxClusterSize(maxClusterSize);
+    ec.setSearchMethod(tree);
+    ec.setInputCloud(cloud_clusters);
+
+    // perform the clustering
+    ec.extract(clusters_inliers);
+    std::cout << "Clusters identified: " << clusters_inliers.size() << std::endl;
+    
+    for(int i = 0; i < clusters_inliers.size(); i++)
+    {
+        // iterate through the cluster points
+        for(int j = 0; j < clusters_inliers.at(i).indices.size(); j++)
+        {
+            cloud_clusters->points.at(clusters_inliers.at(i).indices.at(j)).r = 0;
+            cloud_clusters->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
+            cloud_clusters->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
+        }
+    }
 
 	// start timing the processing step
     //watch.reset();
