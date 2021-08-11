@@ -41,6 +41,8 @@ This program was built using the existing pcl_heaadless as a basis, with code me
 #include <pcl/sample_consensus/sac_model_plane.h>
 #include <pcl/segmentation/sac_segmentation.h>
 
+#include <pcl/filters/extract_indices.h>
+
 #define NUM_COMMAND_ARGS 2
 
 
@@ -163,25 +165,45 @@ int main(int argc, char** argv)
     //pcl::StopWatch watch;
 
     // open the point cloud
-    pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
-    openCloud(cloud, inputFilePath);
+    pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_in(new pcl::PointCloud<pcl::PointXYZRGBA>);
+    openCloud(cloud_in, inputFilePath);
     
-    // segment a plane
+    // segment largest plane
     const float distanceThreshold = 0.0254;
     const int maxIterations = 5000;
-    pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
-    segmentPlane(cloud, inliers, distanceThreshold, maxIterations);
-    std::cout << "Segmentation result: " << inliers->indices.size() << " points" << std::endl;
+    pcl::PointIndices::Ptr plane_inliers(new pcl::PointIndices);
     
-    // color the plane inliers green
-    for(int i = 0; i < inliers->indices.size(); i++)
+    while(1)
     {
-        int index = inliers->indices.at(i);
-        cloud->points.at(index).r = 0;
-        cloud->points.at(index).g = 255;
-        cloud->points.at(index).b = 0;
+    	segmentPlane(cloud_in, plane_inliers, distanceThreshold, maxIterations);
+    	
+    	if(plane_inliers->indices.size() > 35000)
+    	{
+    		break;
+    	}
+    }
+    //std::cout << "Segmentation result: " << plane_inliers->indices.size() << " points" << std::endl;
+    
+    // color the plane plane_inliers green
+    for(int i = 0; i < plane_inliers->indices.size(); i++)
+    {
+        int index = plane_inliers->indices.at(i);
+        cloud_in->points.at(index).r = 0;
+        cloud_in->points.at(index).g = 0;
+        cloud_in->points.at(index).b = 255;
     }
 
+
+    pcl::ExtractIndices<pcl::PointXYZRGBA> filter;
+    filter.setInputCloud(cloud_in);
+    filter.setIndices(plane_inliers);
+    
+    pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_clusters(new pcl::PointCloud<pcl::PointXYZRGBA>);
+    pcl::PointIndices::Ptr clusters_inliers(new pcl::PointIndices);
+    filter.setNegative(true);
+    filter.setKeepOrganized(true);
+    filter.filter(*cloud_clusters);
+    
 
 	// start timing the processing step
     //watch.reset();
@@ -200,7 +222,7 @@ int main(int argc, char** argv)
     //std::cout << elapsedTime << " seconds passed " << std::endl;
 
     // save the point cloud
-	saveCloud(cloud, outputFilePath);
+    saveCloud(cloud_clusters, outputFilePath);
 
     // exit program
     return 0;
