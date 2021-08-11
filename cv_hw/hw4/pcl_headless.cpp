@@ -241,14 +241,66 @@ int main(int argc, char** argv)
     ec.extract(clusters_inliers);
     std::cout << "Clusters identified: " << clusters_inliers.size() << std::endl;
     
+    // check for planarity/sphericality of identified clusters
+    /*
     for(int i = 0; i < clusters_inliers.size(); i++)
     {
+    
+    	//std::cout << clusters_inliers[i].indices.size() << std::endl;
+    
+    	pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
+        temp_filter.setInputCloud(cloud_clusters);
+        
+        pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
+        *inliers_temp = clusters_inliers[i];
+        temp_filter.setIndices(inliers_temp);
+    
+        pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>);
+        temp_filter.setKeepOrganized(true);
+        temp_filter.filter(*cloud_temp);
+        
+        pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
+        segmentPlane(cloud_temp, plane_inliers_temp, distanceThreshold, maxIterations);
+        std::cout << "Segmentation result: " << plane_inliers_temp->indices.size() << " points" << std::endl;
         // iterate through the cluster points
+        
         for(int j = 0; j < clusters_inliers.at(i).indices.size(); j++)
         {
             cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 0;
             cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
             cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
+        }
+    }*/
+
+    for(int i = 0; i < clusters_inliers.size(); i++)
+    {
+        // iterate through the cluster points
+        for(int j = 0; j < clusters_inliers.at(i).indices.size(); j++)
+        {
+            if(i == 0)
+            {
+            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 0;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
+            }
+            else if(i == 1)
+            {
+            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
+            }
+            else if(i == 2)
+            {
+            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 0;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
+            }
+            else
+            {
+            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 0;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 255;
+            }
         }
     }
 
