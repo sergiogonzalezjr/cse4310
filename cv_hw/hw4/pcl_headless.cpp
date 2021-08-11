@@ -222,7 +222,7 @@ int main(int argc, char** argv)
     // create the vector of indices lists (each element contains a list of imultiple indices)
     const float clusterDistance = 0.02;
     int minClusterSize = 1000;
-    int maxClusterSize = 20000;
+    int maxClusterSize = 10000;
     std::vector<pcl::PointIndices> clusters_inliers;
 
     // Creating the KdTree object for the search method of the extraction
