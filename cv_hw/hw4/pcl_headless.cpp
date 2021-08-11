@@ -42,6 +42,12 @@ This program was built using the existing pcl_heaadless as a basis, with code me
 #include <pcl/segmentation/sac_segmentation.h>
 
 #include <pcl/filters/extract_indices.h>
+#include <pcl/filters/voxel_grid.h>
+
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/io.h>
+#include <pcl/segmentation/euclidean_cluster_comparator.h>
+#include <pcl/segmentation/extract_clusters.h>
 
 #define NUM_COMMAND_ARGS 2
 
@@ -204,6 +210,13 @@ int main(int argc, char** argv)
     filter.setKeepOrganized(true);
     filter.filter(*cloud_clusters);
     
+    // cloud downsample using voxel grid
+    const float voxelSize = 0.01;
+    //pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudFiltered(new pcl::PointCloud<pcl::PointXYZRGBA>);
+    pcl::VoxelGrid<pcl::PointXYZRGBA> voxFilter;
+    voxFilter.setInputCloud(cloud_clusters);
+    voxFilter.setLeafSize(static_cast<float>(voxelSize), static_cast<float>(voxelSize), static_cast<float>(voxelSize));
+    voxFilter.filter(*cloud_clusters);
 
 	// start timing the processing step
     //watch.reset();
@@ -222,7 +235,7 @@ int main(int argc, char** argv)
     //std::cout << elapsedTime << " seconds passed " << std::endl;
 
     // save the point cloud
-    saveCloud(cloud_clusters, outputFilePath);
+    saveCloud(cloud_in, outputFilePath);
 
     // exit program
     return 0;
