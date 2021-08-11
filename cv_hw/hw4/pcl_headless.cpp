@@ -246,9 +246,9 @@ int main(int argc, char** argv)
         // iterate through the cluster points
         for(int j = 0; j < clusters_inliers.at(i).indices.size(); j++)
         {
-            cloud_clusters->points.at(clusters_inliers.at(i).indices.at(j)).r = 0;
-            cloud_clusters->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
-            cloud_clusters->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
+            cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 0;
+            cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
+            cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
         }
     }
 
