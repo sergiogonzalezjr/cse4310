@@ -5,6 +5,8 @@ CMakeFiles/pcl_headless.dir/pcl_headless.cpp.o
  /home/sergio/Documents/cse4310/cv_hw/hw4/pcl_headless.cpp
  /usr/include/eigen3/Eigen/Cholesky
  /usr/include/eigen3/Eigen/Core
+ /usr/include/eigen3/Eigen/Dense
+ /usr/include/eigen3/Eigen/Eigenvalues
  /usr/include/eigen3/Eigen/Geometry
  /usr/include/eigen3/Eigen/Householder
  /usr/include/eigen3/Eigen/Jacobi
@@ -146,6 +148,20 @@ CMakeFiles/pcl_headless.dir/pcl_headless.cpp.o
  /usr/include/eigen3/Eigen/src/Core/util/ReenableStupidWarnings.h
  /usr/include/eigen3/Eigen/src/Core/util/StaticAssert.h
  /usr/include/eigen3/Eigen/src/Core/util/XprHelper.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/ComplexEigenSolver.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/ComplexSchur.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/ComplexSchur_LAPACKE.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/EigenSolver.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/HessenbergDecomposition.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/RealQZ.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/RealSchur.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/RealSchur_LAPACKE.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/SelfAdjointEigenSolver_LAPACKE.h
+ /usr/include/eigen3/Eigen/src/Eigenvalues/Tridiagonalization.h
  /usr/include/eigen3/Eigen/src/Geometry/AlignedBox.h
  /usr/include/eigen3/Eigen/src/Geometry/AngleAxis.h
  /usr/include/eigen3/Eigen/src/Geometry/EulerAngles.h
@@ -197,6 +213,21 @@ CMakeFiles/pcl_headless.dir/pcl_headless.cpp.o
  /usr/include/eigen3/Eigen/src/plugins/CommonCwiseUnaryOps.h
  /usr/include/eigen3/Eigen/src/plugins/MatrixCwiseBinaryOps.h
  /usr/include/eigen3/Eigen/src/plugins/MatrixCwiseUnaryOps.h
+ /usr/include/eigen3/unsupported/Eigen/NonLinearOptimization
+ /usr/include/eigen3/unsupported/Eigen/NumericalDiff
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/HybridNonLinearSolver.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/LevenbergMarquardt.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/chkder.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/covar.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/dogleg.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/fdjac1.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/lmpar.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/qrsolv.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/r1mpyq.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/r1updt.h
+ /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/rwupdt.h
+ /usr/include/eigen3/unsupported/Eigen/src/NumericalDiff/NumericalDiff.h
+ /usr/local/include/pcl-1.11/pcl/ModelCoefficients.h
  /usr/local/include/pcl-1.11/pcl/PCLHeader.h
  /usr/local/include/pcl-1.11/pcl/PCLImage.h
  /usr/local/include/pcl-1.11/pcl/PCLPointCloud2.h
@@ -204,16 +235,28 @@ CMakeFiles/pcl_headless.dir/pcl_headless.cpp.o
  /usr/local/include/pcl-1.11/pcl/PointIndices.h
  /usr/local/include/pcl-1.11/pcl/PolygonMesh.h
  /usr/local/include/pcl-1.11/pcl/Vertices.h
+ /usr/local/include/pcl-1.11/pcl/cloud_iterator.h
+ /usr/local/include/pcl-1.11/pcl/common/centroid.h
+ /usr/local/include/pcl-1.11/pcl/common/common.h
  /usr/local/include/pcl-1.11/pcl/common/concatenate.h
  /usr/local/include/pcl-1.11/pcl/common/copy_point.h
+ /usr/local/include/pcl-1.11/pcl/common/distances.h
+ /usr/local/include/pcl-1.11/pcl/common/eigen.h
+ /usr/local/include/pcl-1.11/pcl/common/impl/accumulators.hpp
+ /usr/local/include/pcl-1.11/pcl/common/impl/centroid.hpp
+ /usr/local/include/pcl-1.11/pcl/common/impl/common.hpp
  /usr/local/include/pcl-1.11/pcl/common/impl/copy_point.hpp
+ /usr/local/include/pcl-1.11/pcl/common/impl/eigen.hpp
  /usr/local/include/pcl-1.11/pcl/common/impl/io.hpp
  /usr/local/include/pcl-1.11/pcl/common/io.h
+ /usr/local/include/pcl-1.11/pcl/common/point_tests.h
  /usr/local/include/pcl-1.11/pcl/common/time.h
  /usr/local/include/pcl-1.11/pcl/console/print.h
  /usr/local/include/pcl-1.11/pcl/conversions.h
+ /usr/local/include/pcl-1.11/pcl/correspondence.h
  /usr/local/include/pcl-1.11/pcl/exceptions.h
  /usr/local/include/pcl-1.11/pcl/for_each_type.h
+ /usr/local/include/pcl-1.11/pcl/impl/cloud_iterator.hpp
  /usr/local/include/pcl-1.11/pcl/impl/pcl_base.hpp
  /usr/local/include/pcl-1.11/pcl/impl/point_types.hpp
  /usr/local/include/pcl-1.11/pcl/io/boost.h
@@ -236,5 +279,57 @@ CMakeFiles/pcl_headless.dir/pcl_headless.cpp.o
  /usr/local/include/pcl-1.11/pcl/point_struct_traits.h
  /usr/local/include/pcl-1.11/pcl/point_types.h
  /usr/local/include/pcl-1.11/pcl/register_point_struct.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/boost.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/eigen.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/lmeds.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/mlesac.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/msac.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/prosac.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/ransac.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/rmsac.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/rransac.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_circle.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_circle3d.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_cone.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_cylinder.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_line.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_normal_parallel_plane.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_normal_plane.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_normal_sphere.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_parallel_line.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_parallel_plane.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_perpendicular_plane.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_plane.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_sphere.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/impl/sac_model_stick.hpp
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/lmeds.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/method_types.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/mlesac.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/model_types.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/msac.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/prosac.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/ransac.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/rmsac.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/rransac.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_circle.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_circle3d.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_cone.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_cylinder.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_line.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_normal_parallel_plane.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_normal_plane.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_normal_sphere.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_parallel_line.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_parallel_plane.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_perpendicular_plane.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_plane.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_sphere.h
+ /usr/local/include/pcl-1.11/pcl/sample_consensus/sac_model_stick.h
+ /usr/local/include/pcl-1.11/pcl/search/impl/search.hpp
+ /usr/local/include/pcl-1.11/pcl/search/search.h
+ /usr/local/include/pcl-1.11/pcl/segmentation/impl/sac_segmentation.hpp
+ /usr/local/include/pcl-1.11/pcl/segmentation/sac_segmentation.h
  /usr/local/include/pcl-1.11/pcl/type_traits.h
  /usr/local/include/pcl-1.11/pcl/types.h

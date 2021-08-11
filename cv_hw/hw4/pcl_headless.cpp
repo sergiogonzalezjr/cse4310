@@ -1,3 +1,10 @@
+/*
+Sergio Gonzalez
+CSE 4310 HW4
+
+This program was built using the existing pcl_heaadless as a basis, with code merged in from pcl_plane.
+*/
+
 //
 //    Copyright 2021 Christopher D. McMurrough
 //
@@ -28,6 +35,11 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/ply_io.h>
 #include <pcl/common/time.h>
+
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/sac_model_plane.h>
+#include <pcl/segmentation/sac_segmentation.h>
 
 #define NUM_COMMAND_ARGS 2
 
@@ -110,6 +122,25 @@ bool saveCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, std:
     }
 }
 
+
+void segmentPlane(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, pcl::PointIndices::Ptr &inliers, double distanceThreshold, int maxIterations)
+{
+    // store the model coefficients
+    pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
+
+    // Create the segmentation object for the planar model and set the parameters
+    pcl::SACSegmentation<pcl::PointXYZRGBA> seg;
+    seg.setOptimizeCoefficients(true);
+    seg.setModelType(pcl::SACMODEL_PLANE);
+    seg.setMethodType(pcl::SAC_RANSAC);
+    seg.setMaxIterations(maxIterations);
+    seg.setDistanceThreshold(distanceThreshold);
+
+    // Segment the largest planar component from the remaining cloud
+    seg.setInputCloud(cloudIn);
+    seg.segment(*inliers, *coefficients);
+}
+
 /***********************************************************************************************************************
 * @brief program entry point
 * @param[in] argc number of command line arguments
@@ -120,24 +151,41 @@ bool saveCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, std:
 int main(int argc, char** argv)
 {
     // validate and parse the command line arguments
-    if(argc != NUM_COMMAND_ARGS + 1)
+    if(argc != NUM_COMMAND_ARGS)
     {
         std::printf("USAGE: %s <file_name>\n", argv[0]);
         return 0;
     }
 	std::string inputFilePath(argv[1]);
-	std::string outputFilePath(argv[2]);
+	std::string outputFilePath = "output.pcd";
 
     // create a stop watch for measuring time
-    pcl::StopWatch watch;
+    //pcl::StopWatch watch;
 
     // open the point cloud
     pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGBA>);
     openCloud(cloud, inputFilePath);
+    
+    // segment a plane
+    const float distanceThreshold = 0.0254;
+    const int maxIterations = 5000;
+    pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
+    segmentPlane(cloud, inliers, distanceThreshold, maxIterations);
+    std::cout << "Segmentation result: " << inliers->indices.size() << " points" << std::endl;
+    
+    // color the plane inliers green
+    for(int i = 0; i < inliers->indices.size(); i++)
+    {
+        int index = inliers->indices.at(i);
+        cloud->points.at(index).r = 0;
+        cloud->points.at(index).g = 255;
+        cloud->points.at(index).b = 0;
+    }
+
 
 	// start timing the processing step
-    watch.reset();
-	
+    //watch.reset();
+	/*
 	// color all of the points random colors
 	for(int i = 0; i < cloud->points.size(); i++)
 	{
@@ -145,10 +193,11 @@ int main(int argc, char** argv)
 		cloud->points.at(i).g = rand() % 256;
 		cloud->points.at(i).b = rand() % 256;
 	}
-
+	*/
+	
     // get the elapsed time
-    double elapsedTime = watch.getTimeSeconds();
-    std::cout << elapsedTime << " seconds passed " << std::endl;
+    //double elapsedTime = watch.getTimeSeconds();
+    //std::cout << elapsedTime << " seconds passed " << std::endl;
 
     // save the point cloud
 	saveCloud(cloud, outputFilePath);
