@@ -211,12 +211,12 @@ int main(int argc, char** argv)
     filter.filter(*cloud_clusters);
     
     // cloud downsample using voxel grid
-    /*const float voxelSize = 0.01;
+    const float voxelSize = 0.01;
     //pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudFiltered(new pcl::PointCloud<pcl::PointXYZRGBA>);
     pcl::VoxelGrid<pcl::PointXYZRGBA> voxFilter;
     voxFilter.setInputCloud(cloud_clusters);
     voxFilter.setLeafSize(static_cast<float>(voxelSize), static_cast<float>(voxelSize), static_cast<float>(voxelSize));
-    voxFilter.filter(*cloud_clusters);*/
+    voxFilter.filter(*cloud_clusters);
     
     // cluster
     // create the vector of indices lists (each element contains a list of imultiple indices)
@@ -242,12 +242,12 @@ int main(int argc, char** argv)
     std::cout << "Clusters identified: " << clusters_inliers.size() << std::endl;
     
     // check for planarity/sphericality of identified clusters
-    /*
+    
     for(int i = 0; i < clusters_inliers.size(); i++)
     {
     
     	std::cout << clusters_inliers[i].indices.size() << std::endl;
-    
+    /*
     	pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
         temp_filter.setInputCloud(cloud_clusters);
         
@@ -270,9 +270,9 @@ int main(int argc, char** argv)
             cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 0;
             cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
             cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
-        }
-    }*/
-
+        }*/
+    }
+/*
     for(int i = 0; i < clusters_inliers.size(); i++)
     {
         // iterate through the cluster points
@@ -292,7 +292,7 @@ int main(int argc, char** argv)
             }
         }
     }
-
+*/
 	// start timing the processing step
     //watch.reset();
 	/*
@@ -310,7 +310,7 @@ int main(int argc, char** argv)
     //std::cout << elapsedTime << " seconds passed " << std::endl;
 
     // save the point cloud
-    saveCloud(cloud_in, outputFilePath);
+    saveCloud(cloud_clusters, outputFilePath);
 
     // exit program
     return 0;
