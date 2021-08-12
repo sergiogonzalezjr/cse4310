@@ -176,7 +176,7 @@ int main(int argc, char** argv)
     
     // segment largest plane
     const float distanceThreshold = 0.0254;
-    const int maxIterations = 5000;
+    const int maxIterations = 30000;
     pcl::PointIndices::Ptr plane_inliers(new pcl::PointIndices);
     
     while(1)
@@ -246,7 +246,7 @@ int main(int argc, char** argv)
     for(int i = 0; i < clusters_inliers.size(); i++)
     {
     
-    	//std::cout << clusters_inliers[i].indices.size() << std::endl;
+    	std::cout << clusters_inliers[i].indices.size() << std::endl;
     
     	pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
         temp_filter.setInputCloud(cloud_clusters);
@@ -256,6 +256,7 @@ int main(int argc, char** argv)
         temp_filter.setIndices(inliers_temp);
     
         pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>);
+        temp_filter.setNegative(false);
         temp_filter.setKeepOrganized(true);
         temp_filter.filter(*cloud_temp);
         
@@ -277,19 +278,7 @@ int main(int argc, char** argv)
         // iterate through the cluster points
         for(int j = 0; j < clusters_inliers.at(i).indices.size(); j++)
         {
-            if(i == 0)
-            {
-            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 0;
-                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
-                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
-            }
-            else if(i == 1)
-            {
-            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
-                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
-                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
-            }
-            else if(i == 2)
+            if(i == 2)
             {
             	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
                 cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 0;
@@ -298,7 +287,7 @@ int main(int argc, char** argv)
             else
             {
             	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
-                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 0;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
                 cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 255;
             }
         }
