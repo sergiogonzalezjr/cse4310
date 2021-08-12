@@ -220,7 +220,7 @@ int main(int argc, char** argv)
     
     // cluster
     // create the vector of indices lists (each element contains a list of imultiple indices)
-    const float clusterDistance = 0.02;
+    const float clusterDistance = 0.01;
     int minClusterSize = 200;
     int maxClusterSize = 10000;
     std::vector<pcl::PointIndices> clusters_inliers;
@@ -322,7 +322,7 @@ int main(int argc, char** argv)
     //std::cout << elapsedTime << " seconds passed " << std::endl;
 
     // save the point cloud
-    saveCloud(cloud_in, outputFilePath);
+    saveCloud(cloud_clusters, outputFilePath);
 
     // exit program
     return 0;
