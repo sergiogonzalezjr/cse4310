@@ -221,7 +221,7 @@ int main(int argc, char** argv)
     // cluster
     // create the vector of indices lists (each element contains a list of imultiple indices)
     const float clusterDistance = 0.02;
-    int minClusterSize = 1000;
+    int minClusterSize = 200;
     int maxClusterSize = 10000;
     std::vector<pcl::PointIndices> clusters_inliers;
 
@@ -272,16 +272,28 @@ int main(int argc, char** argv)
             cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
         }*/
     }
-/*
+
     for(int i = 0; i < clusters_inliers.size(); i++)
     {
         // iterate through the cluster points
         for(int j = 0; j < clusters_inliers.at(i).indices.size(); j++)
         {
-            if(i == 2)
+            if(i == 0)
             {
             	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
                 cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 0;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
+            }
+            else if (i == 1)
+            {
+            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 0;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
+            }
+            else if (i == 2)
+            {
+            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
+                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
                 cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
             }
             else
@@ -292,7 +304,7 @@ int main(int argc, char** argv)
             }
         }
     }
-*/
+
 	// start timing the processing step
     //watch.reset();
 	/*
