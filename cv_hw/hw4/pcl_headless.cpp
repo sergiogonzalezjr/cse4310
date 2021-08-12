@@ -211,7 +211,7 @@ int main(int argc, char** argv)
     filter.filter(*cloud_clusters);
     
     // cloud downsample using voxel grid
-    const float voxelSize = 0.01;
+    const float voxelSize = 0.005;
     //pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudFiltered(new pcl::PointCloud<pcl::PointXYZRGBA>);
     pcl::VoxelGrid<pcl::PointXYZRGBA> voxFilter;
     voxFilter.setInputCloud(cloud_clusters);
