@@ -295,13 +295,13 @@ int main(int argc, char** argv)
             	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
                 cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
                 cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
-            }*/
+            }
             else
             {
             	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
                 cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
                 cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 255;
-            }
+            }*/
         }
     }
 
@@ -322,7 +322,7 @@ int main(int argc, char** argv)
     //std::cout << elapsedTime << " seconds passed " << std::endl;
 
     // save the point cloud
-    saveCloud(cloud_clusters, outputFilePath);
+    saveCloud(cloud_in, outputFilePath);
 
     // exit program
     return 0;
