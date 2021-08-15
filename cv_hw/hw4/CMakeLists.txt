@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-project(pcl_viewer)
+project(program4)
 
 # set build type to release
 set(CMAKE_BUILD_TYPE "Release")
@@ -8,10 +8,10 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 11)
 
 # configure PCL
-find_package(PCL 1.8.0 REQUIRED)
+find_package(PCL 1.11.1 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable (pcl_headless pcl_headless.cpp)
-target_link_libraries (pcl_headless ${PCL_LIBRARIES})
+add_executable (program4 program4.cpp)
+target_link_libraries (program4 ${PCL_LIBRARIES})
