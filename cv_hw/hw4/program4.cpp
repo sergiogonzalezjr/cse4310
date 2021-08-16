@@ -38,7 +38,6 @@ This program was built using the existing pcl_heaadless as a basis, with code me
 
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/sample_consensus/method_types.h>
-#include <pcl/sample_consensus/ransac.h>
 #include <pcl/sample_consensus/sac_model_plane.h>
 #include <pcl/sample_consensus/sac_model_circle.h>
 #include <pcl/sample_consensus/sac_model_sphere.h>
@@ -51,6 +50,8 @@ This program was built using the existing pcl_heaadless as a basis, with code me
 #include <pcl/kdtree/io.h>
 #include <pcl/segmentation/euclidean_cluster_comparator.h>
 #include <pcl/segmentation/extract_clusters.h>
+
+#include <thread>
 
 #define NUM_COMMAND_ARGS 2
 
@@ -199,8 +200,13 @@ void segmentCircle(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, 
     //seg.setProbability(0.9999);
 
     // Segment the largest planar component from the remaining cloud
+    
+    std::cout << "\tBefore: " << inliers->indices.size() << std::endl;
+    
     seg.setInputCloud(cloudIn);
     seg.segment(*inliers, *coefficients);
+    
+    std::cout << "\tAfter: " << inliers->indices.size() << std::endl;
 }
 
 /***********************************************************************************************************************
@@ -232,16 +238,6 @@ int main(int argc, char** argv)
     const float distanceThreshold = 0.0254;
     const int maxIterations = 5000;
     pcl::PointIndices::Ptr plane_inliers(new pcl::PointIndices);
-    /*
-    while(1)
-    {
-    	segmentPlane(cloud_in, plane_inliers, distanceThreshold, maxIterations);
-    	
-    	if(plane_inliers->indices.size() > 35000)
-    	{
-    		break;
-    	}
-    }*/
     
     // cloud downsample using voxel grid
     const float voxelSize = 0.0025;
@@ -294,8 +290,33 @@ int main(int argc, char** argv)
     ec.extract(clusters_inliers);
     std::cout << "Clusters identified: " << clusters_inliers.size() << std::endl;
     
+    
+    
     for(int i = 0; i < clusters_inliers.size(); i++)
     {
+    	if(i == 3)
+    	{
+    	
+    	pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
+	*inliers_temp = clusters_inliers[i];
+	
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>(*cloud_clusters, inliers_temp->indices));
+	
+	//std::cout << cloud_temp->points.size() << std::endl;
+	
+	pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
+	const float temp_distanceThreshold = .0254;
+    	const int temp_maxIterations = 5000;
+    
+	segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);
+	std::cout << "Segmentation result: " << plane_inliers_temp->indices.size() << " points" << std::endl;    
+	
+	if(i == 3)
+	{
+		saveCloud(cloud_temp, "test.pcd");
+	}
+	}
+    	/*
     	pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
 	temp_filter.setInputCloud(cloud_clusters);
 	
@@ -308,22 +329,49 @@ int main(int argc, char** argv)
 	temp_filter.setKeepOrganized(true);
 	temp_filter.filter(*cloud_temp);
 	
+	
 	pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
 	
-	const float temp_distanceThreshold = .2;
-    	const int temp_maxIterations = 5000;
+	const float temp_distanceThreshold = .0254;
+    	const int temp_maxIterations = 1000000;
     
 	segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);
 	
 	std::cout << "Cluster Size: " << clusters_inliers[i].indices.size() << " points" << std::endl;
 	std::cout << "Segmentation result: " << plane_inliers_temp->indices.size() << " points" << std::endl;    	
 	
-	if(i == 3)
+	if(i == 0)
+	{
+		saveCloud(cloud_temp, "output_plane_1.pcd");
+	}
+	if(i == 1)
+	{
+		saveCloud(cloud_temp, "output_plane_2.pcd");
+	}
+	if(i == 2)
+	{
+		saveCloud(cloud_temp, "output_hemisphere.pcd");
+	}
+	else if(i == 3)
 	{
 		saveCloud(cloud_temp, "output_miniplane.pcd");
 	}
+	}
+	*/
     } /*COME HERE */
+    /*
+    pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
+	temp_filter.setInputCloud(cloud_clusters);
+	
+	pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
+	*inliers_temp = clusters_inliers[3];
+	temp_filter.setIndices(inliers_temp);
     
+	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>);
+	temp_filter.setNegative(false);
+	temp_filter.setKeepOrganized(true);
+	temp_filter.filter(*cloud_temp);
+    */   
     /*
     for(int i = 0; i < clusters_inliers.size(); i++)
     {
