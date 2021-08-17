@@ -2,7 +2,7 @@
 Sergio Gonzalez
 CSE 4310 HW4
 
-This program was built using the existing pcl_heaadless as a basis, with code merged in from pcl_plane.
+This program was built using the existing pcl_headless as a basis, with code merged in from pcl_plane and pcl_cluster.
 */
 
 //
@@ -202,14 +202,21 @@ int main(int argc, char** argv)
     
     // cloud downsample using voxel grid
     const float voxelSize = 0.0025;
-    //pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloudFiltered(new pcl::PointCloud<pcl::PointXYZRGBA>);
     pcl::VoxelGrid<pcl::PointXYZRGBA> voxFilter;
     voxFilter.setInputCloud(cloud_in);
     voxFilter.setLeafSize(static_cast<float>(voxelSize), static_cast<float>(voxelSize), static_cast<float>(voxelSize));
     voxFilter.filter(*cloud_in);
     
-    segmentPlane(cloud_in, plane_inliers, distanceThreshold, maxIterations);
-    std::cout << "Segmentation result: " << plane_inliers->indices.size() << " points" << std::endl;
+    // ensure that the first plane removed is the ground plane, it is know it is well over 35k points
+    while(1)
+    {
+    	segmentPlane(cloud_in, plane_inliers, distanceThreshold, maxIterations);
+    	
+    	if(plane_inliers->indices.size() > 35000)
+    	{
+    		break;
+    	}
+    }
     
     for(int i = 0; i < plane_inliers->indices.size(); i++)
     {
@@ -225,11 +232,11 @@ int main(int argc, char** argv)
     filter.setIndices(plane_inliers);
     
     pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_clusters(new pcl::PointCloud<pcl::PointXYZRGBA>);
-    //pcl::PointIndices::Ptr clusters_inliers(new pcl::PointIndices);
     filter.setNegative(true);
     filter.setKeepOrganized(true);
     filter.filter(*cloud_clusters);
     
+    // identify clusters in cloud sans tabletop
     const float clusterDistance = 0.02;
     int minClusterSize = 1000;
     int maxClusterSize = 10000;
@@ -249,9 +256,9 @@ int main(int argc, char** argv)
 
     // perform the clustering
     ec.extract(clusters_inliers);
-    std::cout << "Clusters identified: " << clusters_inliers.size() << std::endl;
     
-    
+    int boxCount = 0;
+    int sphereCount = 0;
     
     for(int i = 0; i < clusters_inliers.size(); i++)
     {
@@ -261,34 +268,45 @@ int main(int argc, char** argv)
 	
 	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>(*cloud_clusters, inliers_temp->indices));
 	
-	//std::cout << cloud_temp->points.size() << std::endl;
-	
 	const float temp_distanceThreshold = .02;
     	const int temp_maxIterations = 50;
     	
+    	// plane segmentation
     	pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
 	segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);  
 	int plane_inliers_count = plane_inliers_temp->indices.size();
 	
+	//sphere segmentation
 	pcl::PointIndices::Ptr sphere_inliers_temp(new pcl::PointIndices);
 	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
 	segmentSphere(cloud_temp, sphere_inliers_temp, coefficients, temp_distanceThreshold, temp_maxIterations);
 	int sphere_inliers_count = sphere_inliers_temp->indices.size();
-
-    	//std::cout << "\tRadius: " << coefficients->values[3] << "\n" << std::endl;
+	
 	bool isPlane = false;
 	
+	// over 75 percent success plane segmentation is a box
 	if( (float)(plane_inliers_count/(plane_inliers_temp->indices.size())) >= 0.75 )
 	{
 		isPlane = true;
 	}
 	
-	if( ((float)(sphere_inliers_count/(sphere_inliers_temp->indices.size())) >= 0.75 ) && (coefficients->values[3] < 0.15))
+	// over 75 percent success sphere segmentation is a sphere, as well as the radius being less than 20 cm
+	if( ((float)(sphere_inliers_count/(sphere_inliers_temp->indices.size())) >= 0.75 ) && (coefficients->values[3] < 0.20))
 	{
 		isPlane = false;
 	}
 
+	// increment counters
+	if(isPlane)
+	{
+		boxCount++;
+	}
+	else
+	{
+		sphereCount++;
+	}
 	
+	// based on segmentation comparisons, color boxes green, and spheres red
 	for(int j = 0; j < clusters_inliers[i].indices.size(); j++)
     	{
     		int index = clusters_inliers[i].indices.at(j);
@@ -306,316 +324,11 @@ int main(int argc, char** argv)
 			cloud_in->points.at(index).b = 0;
         	}
     	}
-    } /*COME HERE */
-    /*
-    pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
-	temp_filter.setInputCloud(cloud_clusters);
-	
-	pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
-	*inliers_temp = clusters_inliers[3];
-	temp_filter.setIndices(inliers_temp);
+    } 
     
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>);
-	temp_filter.setNegative(false);
-	temp_filter.setKeepOrganized(true);
-	temp_filter.filter(*cloud_temp);
-    */   
-    /*
-    for(int i = 0; i < clusters_inliers.size(); i++)
-    {
-    	if(i == 2)
-    	{
-	    	std::cout << clusters_inliers[i].indices.size() << std::endl;
-		
-		pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
-		temp_filter.setInputCloud(cloud_clusters);
-		
-		pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
-		*inliers_temp = clusters_inliers[i];
-		temp_filter.setIndices(inliers_temp);
-	    
-		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>);
-		temp_filter.setNegative(false);
-		temp_filter.setKeepOrganized(true);
-		temp_filter.filter(*cloud_temp);
-		
-		pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
-		
-		const float temp_distanceThreshold = .5;
-	    	const int temp_maxIterations = 5000;
-	    
-		//segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);
-		
-		segmentCircle(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);
-
-		
-		std::cout << "Segmentation result: " << plane_inliers_temp->indices.size() << " points" << std::endl;    	
-		
-		for(int j = 0; j < plane_inliers_temp->indices.size(); j++)
-		{
-		    if(i == 3)
-		    {
-		    	cloud_temp->points.at(plane_inliers_temp->indices.at(j)).r = 0;
-		        cloud_temp->points.at(plane_inliers_temp->indices.at(j)).g = 255;
-		        cloud_temp->points.at(plane_inliers_temp->indices.at(j)).b = 0;
-		    }
-		    else
-		    {
-		    	cloud_temp->points.at(plane_inliers_temp->indices.at(j)).r = 0;
-		        cloud_temp->points.at(plane_inliers_temp->indices.at(j)).g = 0;
-		        cloud_temp->points.at(plane_inliers_temp->indices.at(j)).b = 255;
-		    }
-		}
-        
-		
-		if(i == 2)
-		{
-			saveCloud(cloud_temp, "output_2.pcd");
-		}
-	}
-    }*/
-
-    
-    /*
-    for(int i = 0; i < clusters_inliers.size(); i++)
-    {
-    	if(i == 3)
-    	{
-	    	std::cout << clusters_inliers[i].indices.size() << std::endl;
-		
-		pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
-		temp_filter.setInputCloud(cloud_clusters);
-		
-		pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
-		*inliers_temp = clusters_inliers[i];
-		temp_filter.setIndices(inliers_temp);
-	    
-		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>);
-		temp_filter.setNegative(false);
-		temp_filter.setKeepOrganized(true);
-		temp_filter.filter(*cloud_temp);
-		
-		pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
-		
-		const float temp_distanceThreshold = .0254;
-	    	const int temp_maxIterations = 5000;
-	    
-		//segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);
-		
-		while(1)
-	    	{
-	    		segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);
-	    	
-	    		if(plane_inliers_temp->indices.size() > 100)  
-	    		{
-	    			break;
-	    		}
-	    	}
-
-		
-		std::cout << "Segmentation result: " << plane_inliers_temp->indices.size() << " points" << std::endl;    	
-		
-		for(int j = 0; j < plane_inliers_temp->indices.size(); j++)
-		{
-		    if(i == 3)
-		    {
-		    	cloud_temp->points.at(plane_inliers_temp->indices.at(j)).r = 0;
-		        cloud_temp->points.at(plane_inliers_temp->indices.at(j)).g = 255;
-		        cloud_temp->points.at(plane_inliers_temp->indices.at(j)).b = 0;
-		    }
-		    else
-		    {
-		    	cloud_temp->points.at(plane_inliers_temp->indices.at(j)).r = 0;
-		        cloud_temp->points.at(plane_inliers_temp->indices.at(j)).g = 0;
-		        cloud_temp->points.at(plane_inliers_temp->indices.at(j)).b = 255;
-		    }
-		}
-        
-		
-		if(i == 3)
-		{
-			saveCloud(cloud_temp, "output_3.pcd");
-		}
-	}
-    }*/
-    // check for planarity/sphericality of identified clusters
-    /*
-    for(int i = 0; i < clusters_inliers.size(); i++)
-    {
-    	std::cout << clusters_inliers[i].indices.size() << std::endl;
-	
-	pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
-        temp_filter.setInputCloud(cloud_clusters);
-        
-        pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
-        *inliers_temp = clusters_inliers[i];
-        temp_filter.setIndices(inliers_temp);
-    
-        pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>);
-        temp_filter.setNegative(false);
-        temp_filter.setKeepOrganized(true);
-        temp_filter.filter(*cloud_temp);
-        
-        pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
-        
-        const float temp_distanceThreshold = 0.005;
-    	const int temp_maxIterations = 50000;
-    
-        segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);
-
-        
-        std::cout << "Segmentation result: " << plane_inliers_temp->indices.size() << " points" << std::endl;    	
-    	
-    	for(int j = 0; j < plane_inliers_temp->indices.size(); j++)
-        {
-            if(i == 2)
-            {
-            	cloud_temp->points.at(plane_inliers_temp->indices.at(j)).r = 255;
-                cloud_temp->points.at(plane_inliers_temp->indices.at(j)).g = 0;
-                cloud_temp->points.at(plane_inliers_temp->indices.at(j)).b = 0;
-            }
-            else
-            {
-            	cloud_temp->points.at(plane_inliers_temp->indices.at(j)).r = 0;
-                cloud_temp->points.at(plane_inliers_temp->indices.at(j)).g = 255;
-                cloud_temp->points.at(plane_inliers_temp->indices.at(j)).b = 0;
-            }
-        }
-        
-        if(i == 0)
-        {
-        	saveCloud(cloud_temp, "output_0.pcd");
-        }
-        else if(i == 1)
-        {
-        	saveCloud(cloud_temp, "output_1.pcd");
-        }
-        else if(i == 2)
-        {
-        	saveCloud(cloud_temp, "output_2.pcd");
-        }
-        else if(i == 3)
-        {
-        	saveCloud(cloud_temp, "output_3.pcd");
-        }
-        else
-        {
-        	saveCloud(cloud_temp, "output_4.pcd");
-        }
-    }*/
-    /*
-    // color the plane plane_inliers green
-    for(int i = 0; i < plane_inliers->indices.size(); i++)
-    {
-        int index = plane_inliers->indices.at(i);
-        cloud_in->points.at(index).r = 0;
-        cloud_in->points.at(index).g = 0;
-        cloud_in->points.at(index).b = 255;
-    }
-
-    // extract a cloud sans tabletop
-    pcl::ExtractIndices<pcl::PointXYZRGBA> filter;
-    filter.setInputCloud(cloud_in);
-    filter.setIndices(plane_inliers);
-    
-    pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_clusters(new pcl::PointCloud<pcl::PointXYZRGBA>);
-    //pcl::PointIndices::Ptr clusters_inliers(new pcl::PointIndices);
-    filter.setNegative(true);
-    filter.setKeepOrganized(true);
-    filter.filter(*cloud_clusters);
-    
-    
-    // cluster
-    // create the vector of indices lists (each element contains a list of imultiple indices)
-    const float clusterDistance = 0.005;
-    int minClusterSize = 1000;
-    int maxClusterSize = 10000;
-    std::vector<pcl::PointIndices> clusters_inliers;
-
-    // Creating the KdTree object for the search method of the extraction
-    pcl::search::KdTree<pcl::PointXYZRGBA>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGBA>);
-    tree->setInputCloud(cloud_clusters);
-
-    // create the euclidian cluster extraction object
-    pcl::EuclideanClusterExtraction<pcl::PointXYZRGBA> ec;
-    ec.setClusterTolerance(clusterDistance);
-    ec.setMinClusterSize(minClusterSize);
-    ec.setMaxClusterSize(maxClusterSize);
-    ec.setSearchMethod(tree);
-    ec.setInputCloud(cloud_clusters);
-
-    // perform the clustering
-    ec.extract(clusters_inliers);
-    std::cout << "Clusters identified: " << clusters_inliers.size() << std::endl;
-    
-    // check for planarity/sphericality of identified clusters
-    
-    for(int i = 0; i < clusters_inliers.size(); i++)
-    {
-    
-    	std::cout << clusters_inliers[i].indices.size() << std::endl;
-    
-    	pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
-        temp_filter.setInputCloud(cloud_in);
-        
-        pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
-        *inliers_temp = clusters_inliers[i];
-        temp_filter.setIndices(inliers_temp);
-    
-        pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>);
-        temp_filter.setNegative(false);
-        temp_filter.setKeepOrganized(true);
-        temp_filter.filter(*cloud_temp);
-        
-        pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
-        segmentPlane(cloud_temp, plane_inliers_temp, distanceThreshold, maxIterations);
-        int iteration = 0;
-
-        
-        std::cout << "Segmentation result: " << plane_inliers_temp->indices.size() << " points" << std::endl;
-        
-        if(plane_inliers_temp->indices.size() > 0)
-        {
-        	for(int j = 0; j < clusters_inliers.at(i).indices.size(); j++)
-        	{
-        	cloud_clusters->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
-                cloud_clusters->points.at(clusters_inliers.at(i).indices.at(j)).g = 0;
-                cloud_clusters->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
-                }
-        }
-        // iterate through the cluster points
-
-    }
-    
-
-    for(int i = 0; i < clusters_inliers.size(); i++)
-    {
-        // iterate through the cluster points
-        for(int j = 0; j < clusters_inliers.at(i).indices.size(); j++)
-        {
-            if(i == 2)
-            {
-            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 255;
-                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 0;
-                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
-            }
-            else
-            {
-            	cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).r = 0;
-                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).g = 255;
-                cloud_in->points.at(clusters_inliers.at(i).indices.at(j)).b = 0;
-            }
-        }
-    }
-*/
-	
-    // get the elapsed time
-    //double elapsedTime = watch.getTimeSeconds();
-    //std::cout << elapsedTime << " seconds passed " << std::endl;
-
-    // save the point cloud
+    // print counts and save processed point cloud to an output file
+    std::cout << "BOX COUNT: "<< boxCount << "\nSPHERE COUNT: " << sphereCount << std::endl;
     saveCloud(cloud_in, outputFilePath);
-    //saveCloud(cloud_clusters, "output2.pcd");
 
     // exit program
     return 0;
