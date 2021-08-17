@@ -152,9 +152,6 @@ void segmentPlane(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, p
 
 void segmentSphere(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, pcl::PointIndices::Ptr &inliers, pcl::ModelCoefficients::Ptr &coefficients, double distanceThreshold, int maxIterations)
 {
-    // store the model coefficients
-    //pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
-
     // Create the segmentation object for the planar model and set the parameters
     pcl::SACSegmentation<pcl::PointXYZRGBA> seg;
     seg.setOptimizeCoefficients(true);
@@ -162,7 +159,6 @@ void segmentSphere(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, 
     seg.setMethodType(pcl::SAC_RANSAC);
     seg.setMaxIterations(maxIterations);
     seg.setDistanceThreshold(distanceThreshold);
-    //seg.setProbability(0.9999);
 
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud(cloudIn);
