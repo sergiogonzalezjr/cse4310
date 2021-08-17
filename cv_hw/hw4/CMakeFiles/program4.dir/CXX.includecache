@@ -41,8 +41,6 @@ pcl/segmentation/euclidean_cluster_comparator.h
 -
 pcl/segmentation/extract_clusters.h
 -
-thread
--
 
 /usr/include/eigen3/Eigen/Cholesky
 Core

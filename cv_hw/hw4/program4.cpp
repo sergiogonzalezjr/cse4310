@@ -51,8 +51,6 @@ This program was built using the existing pcl_heaadless as a basis, with code me
 #include <pcl/segmentation/euclidean_cluster_comparator.h>
 #include <pcl/segmentation/extract_clusters.h>
 
-#include <thread>
-
 #define NUM_COMMAND_ARGS 2
 
 
@@ -134,7 +132,6 @@ bool saveCloud(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, std:
     }
 }
 
-
 void segmentPlane(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, pcl::PointIndices::Ptr &inliers, double distanceThreshold, int maxIterations)
 {
     // store the model coefficients
@@ -150,26 +147,13 @@ void segmentPlane(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, p
 
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud(cloudIn);
-    
-    std::cout << "\tBefore: " << inliers->indices.size() << std::endl;
-    
-    seg.segment(*inliers, *coefficients);
-    
-    if(inliers->indices.size() > 0)
-    {
-    	std::cout << "\tAfter: " << inliers->indices.size() << std::endl;
-    
-    	std::cout << coefficients->values[0] << std::endl;
-    	std::cout << coefficients->values[1] << std::endl;
-    	std::cout << coefficients->values[2] << std::endl;
-    	std::cout << coefficients->values[3] << std::endl;
-    }
+    seg.segment(*inliers, *coefficients); 
 }
 
-void segmentSphere(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, pcl::PointIndices::Ptr &inliers, double distanceThreshold, int maxIterations)
+void segmentSphere(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, pcl::PointIndices::Ptr &inliers, pcl::ModelCoefficients::Ptr &coefficients, double distanceThreshold, int maxIterations)
 {
     // store the model coefficients
-    pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
+    //pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
 
     // Create the segmentation object for the planar model and set the parameters
     pcl::SACSegmentation<pcl::PointXYZRGBA> seg;
@@ -183,30 +167,7 @@ void segmentSphere(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, 
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud(cloudIn);
     seg.segment(*inliers, *coefficients);
-}
-
-void segmentCircle(const pcl::PointCloud<pcl::PointXYZRGBA>::ConstPtr &cloudIn, pcl::PointIndices::Ptr &inliers, double distanceThreshold, int maxIterations)
-{
-    // store the model coefficients
-    pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
-
-    // Create the segmentation object for the planar model and set the parameters
-    pcl::SACSegmentation<pcl::PointXYZRGBA> seg;
-    seg.setOptimizeCoefficients(true);
-    seg.setModelType(pcl::SACMODEL_CIRCLE3D);
-    seg.setMethodType(pcl::SAC_RANSAC);
-    seg.setMaxIterations(maxIterations);
-    seg.setDistanceThreshold(distanceThreshold);
-    //seg.setProbability(0.9999);
-
-    // Segment the largest planar component from the remaining cloud
     
-    std::cout << "\tBefore: " << inliers->indices.size() << std::endl;
-    
-    seg.setInputCloud(cloudIn);
-    seg.segment(*inliers, *coefficients);
-    
-    std::cout << "\tAfter: " << inliers->indices.size() << std::endl;
 }
 
 /***********************************************************************************************************************
@@ -294,8 +255,6 @@ int main(int argc, char** argv)
     
     for(int i = 0; i < clusters_inliers.size(); i++)
     {
-    	if(i == 3)
-    	{
     	
     	pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
 	*inliers_temp = clusters_inliers[i];
@@ -304,60 +263,49 @@ int main(int argc, char** argv)
 	
 	//std::cout << cloud_temp->points.size() << std::endl;
 	
-	pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
-	const float temp_distanceThreshold = .0254;
-    	const int temp_maxIterations = 5000;
-    
-	segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);
-	std::cout << "Segmentation result: " << plane_inliers_temp->indices.size() << " points" << std::endl;    
+	const float temp_distanceThreshold = .02;
+    	const int temp_maxIterations = 50;
+    	
+    	pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
+	segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);  
+	int plane_inliers_count = plane_inliers_temp->indices.size();
 	
-	if(i == 3)
+	pcl::PointIndices::Ptr sphere_inliers_temp(new pcl::PointIndices);
+	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
+	segmentSphere(cloud_temp, sphere_inliers_temp, coefficients, temp_distanceThreshold, temp_maxIterations);
+	int sphere_inliers_count = sphere_inliers_temp->indices.size();
+
+    	//std::cout << "\tRadius: " << coefficients->values[3] << "\n" << std::endl;
+	bool isPlane = false;
+	
+	if( (float)(plane_inliers_count/(plane_inliers_temp->indices.size())) >= 0.75 )
 	{
-		saveCloud(cloud_temp, "test.pcd");
+		isPlane = true;
 	}
-	}
-    	/*
-    	pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
-	temp_filter.setInputCloud(cloud_clusters);
 	
-	pcl::PointIndices::Ptr inliers_temp(new pcl::PointIndices);
-	*inliers_temp = clusters_inliers[i];
-	temp_filter.setIndices(inliers_temp);
-    
-	pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZRGBA>);
-	temp_filter.setNegative(false);
-	temp_filter.setKeepOrganized(true);
-	temp_filter.filter(*cloud_temp);
-	
-	
-	pcl::PointIndices::Ptr plane_inliers_temp(new pcl::PointIndices);
-	
-	const float temp_distanceThreshold = .0254;
-    	const int temp_maxIterations = 1000000;
-    
-	segmentPlane(cloud_temp, plane_inliers_temp, temp_distanceThreshold, temp_maxIterations);
-	
-	std::cout << "Cluster Size: " << clusters_inliers[i].indices.size() << " points" << std::endl;
-	std::cout << "Segmentation result: " << plane_inliers_temp->indices.size() << " points" << std::endl;    	
-	
-	if(i == 0)
+	if( ((float)(sphere_inliers_count/(sphere_inliers_temp->indices.size())) >= 0.75 ) && (coefficients->values[3] < 0.15))
 	{
-		saveCloud(cloud_temp, "output_plane_1.pcd");
+		isPlane = false;
 	}
-	if(i == 1)
-	{
-		saveCloud(cloud_temp, "output_plane_2.pcd");
-	}
-	if(i == 2)
-	{
-		saveCloud(cloud_temp, "output_hemisphere.pcd");
-	}
-	else if(i == 3)
-	{
-		saveCloud(cloud_temp, "output_miniplane.pcd");
-	}
-	}
-	*/
+
+	
+	for(int j = 0; j < clusters_inliers[i].indices.size(); j++)
+    	{
+    		int index = clusters_inliers[i].indices.at(j);
+    		
+    		if(isPlane)
+    		{
+			cloud_in->points.at(index).r = 0;
+			cloud_in->points.at(index).g = 255;
+			cloud_in->points.at(index).b = 0;
+        	}
+        	else
+        	{
+        		cloud_in->points.at(index).r = 255;
+			cloud_in->points.at(index).g = 0;
+			cloud_in->points.at(index).b = 0;
+        	}
+    	}
     } /*COME HERE */
     /*
     pcl::ExtractIndices<pcl::PointXYZRGBA> temp_filter;
@@ -659,8 +607,8 @@ int main(int argc, char** argv)
             }
         }
     }
-
-	*/
+*/
+	
     // get the elapsed time
     //double elapsedTime = watch.getTimeSeconds();
     //std::cout << elapsedTime << " seconds passed " << std::endl;
